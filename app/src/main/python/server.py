@@ -135,7 +135,9 @@ def album(bid: str):
 
 @app.get("/api/stream")
 def stream(videoId: str = None, query: str = None):
-    # The user wants to "scrape from youtube.com" for audio
+    # Log the request for debugging
+    print(f"Streaming request: videoId={videoId}, query={query}")
+
     ydl_opts = {
         'format': 'bestaudio/best',
         'quiet': True,
@@ -144,14 +146,17 @@ def stream(videoId: str = None, query: str = None):
         'skip_download': True,
         'noplaylist': True,
         'nocheckcertificate': True,
+        # Add headers to avoid bot detection
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
     }
 
-    # If a query is provided (Title + Artist), use it to search YouTube.
-    # Otherwise, fall back to the videoId URL.
-    if query:
+    # Use the specific videoId if provided, otherwise search
+    if videoId:
+        search_target = f"https://www.youtube.com/watch?v={videoId}"
+    elif query:
         search_target = f"ytsearch1:{query}"
     else:
-        search_target = f"https://www.youtube.com/watch?v={videoId}"
+        return {"error": "No videoId or query provided"}
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -159,12 +164,28 @@ def stream(videoId: str = None, query: str = None):
             if 'entries' in info:
                 info = info['entries'][0]
 
+            stream_url = info.get('url')
+            if not stream_url:
+                # Fallback: try searching if videoId direct extraction failed
+                if videoId and not query:
+                    print(f"Direct extraction failed for {videoId}, trying search fallback...")
+                    # We don't have a title here, but we can try searching the videoId itself
+                    info = ydl.extract_info(f"ytsearch1:{videoId}", download=False)
+                    if 'entries' in info:
+                        info = info['entries'][0]
+                    stream_url = info.get('url')
+
+            if not stream_url:
+                return {"error": "Could not find stream URL"}
+
             return {
-                "url": info.get('url'),
+                "url": stream_url,
                 "title": info.get('title'),
-                "webpage_url": info.get('webpage_url')
+                "webpage_url": info.get('webpage_url'),
+                "id": info.get('id')
             }
     except Exception as e:
+        print(f"Stream error: {str(e)}")
         return {"error": str(e)}
 def start_server():
     import uvicorn
