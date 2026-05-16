@@ -46,6 +46,8 @@ class MainActivity : AppCompatActivity() {
         }
         
         webView.webChromeClient = WebChromeClient()
+        webView.settings.mediaPlaybackRequiresUserGesture = false
+        webView.settings.allowUniversalAccessFromFileURLs = true
         webView.webViewClient = WebViewClient()
 
         webView.addJavascriptInterface(WebAppInterface(), "Android")
