@@ -63,7 +63,18 @@ def artist(bid: str):
         songs = [{"videoId": s.get('videoId'), "title": s.get('title'), "thumbnails": s.get('thumbnails', []), "duration": s.get('duration'), "artists": [{"id": a.get('id'), "name": a.get('name')} for a in s.get('artists', [])]} for s in get_results('songs')]
         albums = [{"id": a.get('browseId'), "title": a.get('title'), "thumbnails": a.get('thumbnails', []), "year": a.get('year'), "type": "Album"} for a in get_results('albums')]
         singles = [{"id": s.get('browseId'), "title": s.get('title'), "thumbnails": s.get('thumbnails', []), "year": s.get('year'), "type": "Single"} for s in get_results('singles')]
-        return {"name": data.get('name'), "description": data.get('description'), "thumbnails": data.get('thumbnails', []), "songs": songs, "albums": albums, "singles": singles}
+        return {
+            "name": data.get('name'),
+            "description": data.get('description'),
+            "thumbnails": data.get('thumbnails', []),
+            "songs": songs,
+            "albums": albums,
+            "singles": singles,
+            "albumsBrowseId": data.get('albums', {}).get('browseId'),
+            "albumsParams": data.get('albums', {}).get('params'),
+            "singlesBrowseId": data.get('singles', {}).get('browseId'),
+            "singlesParams": data.get('singles', {}).get('params')
+        }
     except Exception as e:
         return {"error": str(e), "name": "Error", "songs": [], "albums": [], "singles": []}
 
@@ -73,6 +84,14 @@ def album(bid: str):
     tracks = [{"title": t.get('title'), "duration": t.get('duration'), "videoId": t.get('videoId'), "artists": [{"id": a.get('id'), "name": a.get('name')} for a in t.get('artists',[])]} for t in data.get('tracks',[])]
     data['tracks'] = tracks
     return data
+
+@app.get("/api/artist_albums")
+def artist_albums(browseId: str, params: str):
+    try:
+        data = ytmusic.get_artist_albums(browseId, params)
+        return {"albums": data}
+    except Exception as e:
+        return {"error": str(e), "albums": []}
 
 # --- UPDATED STREAMING ---
 @app.get("/api/stream")

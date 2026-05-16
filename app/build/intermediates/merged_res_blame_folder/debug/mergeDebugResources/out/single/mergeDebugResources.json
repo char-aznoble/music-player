@@ -1,22 +1,34 @@
 [
     {
-        "merged": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-debug-32:\\xml_network_security_config.xml.flat",
-        "source": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-main-34:\\xml\\network_security_config.xml"
+        "merged": "com.chad.player.app-debug-33:/drawable_ic_play.xml.flat",
+        "source": "com.chad.player.app-main-35:/drawable/ic_play.xml"
     },
     {
-        "merged": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-debug-32:\\drawable_ic_launcher_foreground.xml.flat",
-        "source": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-main-34:\\drawable\\ic_launcher_foreground.xml"
+        "merged": "com.chad.player.app-debug-33:/drawable_ic_skip_previous.xml.flat",
+        "source": "com.chad.player.app-main-35:/drawable/ic_skip_previous.xml"
     },
     {
-        "merged": "com.chad.player.app-debug-32:/xml_network_security_config.xml.flat",
-        "source": "com.chad.player.app-main-34:/xml/network_security_config.xml"
+        "merged": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-debug-33:\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-main-35:\\drawable\\ic_launcher_foreground.xml"
     },
     {
-        "merged": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-debug-32:\\mipmap_ic_launcher.xml.flat",
-        "source": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-main-34:\\mipmap\\ic_launcher.xml"
+        "merged": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-debug-33:\\drawable_ic_launcher_background.xml.flat",
+        "source": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-main-35:\\drawable\\ic_launcher_background.xml"
     },
     {
-        "merged": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-debug-32:\\drawable_ic_launcher_background.xml.flat",
-        "source": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-main-34:\\drawable\\ic_launcher_background.xml"
+        "merged": "com.chad.player.app-debug-33:/drawable_ic_pause.xml.flat",
+        "source": "com.chad.player.app-main-35:/drawable/ic_pause.xml"
+    },
+    {
+        "merged": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-debug-33:\\mipmap_ic_launcher.xml.flat",
+        "source": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-main-35:\\mipmap\\ic_launcher.xml"
+    },
+    {
+        "merged": "com.chad.player.app-debug-33:/drawable_ic_skip_next.xml.flat",
+        "source": "com.chad.player.app-main-35:/drawable/ic_skip_next.xml"
+    },
+    {
+        "merged": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-debug-33:\\xml_network_security_config.xml.flat",
+        "source": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-main-35:\\xml\\network_security_config.xml"
     }
 ]

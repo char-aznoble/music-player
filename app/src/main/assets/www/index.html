@@ -200,6 +200,24 @@ function onPlayerStateChange(event) {
     nextTrack();
   }
   updatePlayButton();
+  updateAndroidMedia();
+}
+
+function updateAndroidMedia() {
+  if (window.Android && state.currentSong) {
+    const s = state.currentSong;
+    const artistName = s.artist || (s.artists && s.artists[0] ? s.artists[0].name : '-');
+    const artwork = getThumb(s, 512);
+
+    // Call Android to update system media controls
+    if (window.Android.updateMetadata) {
+        window.Android.updateMetadata(s.title, artistName, artwork);
+    }
+    if (window.Android.updatePlaybackState) {
+        const pos = player ? Math.floor(player.getCurrentTime() * 1000) : 0;
+        window.Android.updatePlaybackState(state.isPlaying, pos);
+    }
+  }
 }
 
 // Navigation history
@@ -403,6 +421,10 @@ function renderArtist(data) {
   state.artistSongs = data.songs || [];
   state.artistAlbums = data.albums || [];
   state.artistSingles = data.singles || [];
+  state.artistAlbumsBrowseId = data.albumsBrowseId;
+  state.artistAlbumsParams = data.albumsParams;
+  state.artistSinglesBrowseId = data.singlesBrowseId;
+  state.artistSinglesParams = data.singlesParams;
   state.currentArtistName = data.name;
 
   let albums = state.artistAlbums;
@@ -460,9 +482,9 @@ function renderArtist(data) {
   html += `</div></div>`;
 
   // Albums
+  html += `<section class="mt-12"><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold">Albums</h2><button onclick="showAllAlbums()" class="text-sm font-bold text-zinc-400 hover:underline">View all albums</button></div>`;
   if (albums.length) {
-    html += `<section class="mt-12"><h2 class="text-2xl font-bold mb-5">Albums</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
     albums.forEach(a => {
       const id = a.id || a.browseId;
       const img = getThumb(a, 400);
@@ -475,13 +497,16 @@ function renderArtist(data) {
         <p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • Album</p>
       </div>`;
     });
-    html += `</div></section>`;
+    html += `</div>`;
+  } else {
+    html += `<p class="text-zinc-500 py-8">No albums found</p>`;
   }
+  html += `</section>`;
 
   // Singles
+  html += `<section class="mt-12 mb-16"><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold">Singles and EPs</h2><button onclick="showAllSingles()" class="text-sm font-bold text-zinc-400 hover:underline">View all</button></div>`;
   if (singles.length) {
-    html += `<section class="mt-12 mb-16"><h2 class="text-2xl font-bold mb-5">Singles and EPs</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
     singles.forEach(a => {
       const id = a.id || a.browseId;
       const img = getThumb(a, 400);
@@ -492,12 +517,58 @@ function renderArtist(data) {
         <p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • Single</p>
       </div>`;
     });
-    html += `</div></section>`;
+    html += `</div>`;
+  } else {
+    html += `<p class="text-zinc-500 py-8">No singles found</p>`;
   }
-  html += `</div>`;
+  html += `</section></div>`;
 
   view.innerHTML = html;
   view.parentElement.scrollTop = 0;
+}
+
+async function showAllAlbums() {
+  if (!state.artistAlbumsBrowseId || !state.artistAlbumsParams) return;
+  view.innerHTML = `<div class="px-6 pb-32 pt-[80px]"><h1 class="text-[32px] font-bold mb-2">${escapeHtml(state.currentArtistName)} — All Albums</h1><p class="text-zinc-400 mb-6">Loading complete discography...</p><div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div></div>`;
+  try {
+    const res = await fetch(`${API_BASE}/api/artist_albums?browseId=${encodeURIComponent(state.artistAlbumsBrowseId)}&params=${encodeURIComponent(state.artistAlbumsParams)}`);
+    const data = await res.json();
+    const albums = data.albums || [];
+    let html = `<div class="px-6 pb-32 pt-[80px] max-w-[1800px] mx-auto"><div class="flex items-center gap-4 mb-8"><button onclick="loadArtist('${state.lastArtistId}')" class="w-8 h-8 bg-black/70 rounded-full flex items-center justify-center hover:bg-black"><i class="ri-arrow-left-s-line text-xl"></i></button><div><h1 class="text-[32px] font-bold">${escapeHtml(state.currentArtistName)}</h1><p class="text-zinc-400">${albums.length} albums</p></div></div>`;
+    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    albums.forEach(a => {
+      const id = a.id || a.browseId;
+      const img = getThumb(a, 400);
+      html += `<div onclick="loadAlbum('${id}')" class="group bg-[#181818] hover:bg-[#282828] p-4 rounded-lg cursor-pointer transition"><div class="relative mb-4"><img src="${img}" class="aspect-square w-full object-cover rounded shadow-lg" onerror="this.src='https://placehold.co/400x400/181818/535353?text=%E2%99%AA'"/><button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition flex items-center justify-center hover:scale-105"><i class="ri-play-fill text-black text-[26px] ml-0.5"></i></button></div><h3 class="font-bold text-[15px] truncate">${escapeHtml(a.title)}</h3><p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • ${a.type||'Album'}</p></div>`;
+    });
+    html += `</div></div>`;
+    view.innerHTML = html;
+    view.parentElement.scrollTop = 0;
+  } catch(e) {
+    view.innerHTML = `<div class="px-6 pt-[80px]">Failed to load albums</div>`;
+  }
+}
+
+async function showAllSingles() {
+  if (!state.artistSinglesBrowseId || !state.artistSinglesParams) return;
+  view.innerHTML = `<div class="px-6 pb-32 pt-[80px]"><h1 class="text-[32px] font-bold mb-2">${escapeHtml(state.currentArtistName)} — All Singles</h1><div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div></div>`;
+  try {
+    const res = await fetch(`${API_BASE}/api/artist_albums?browseId=${encodeURIComponent(state.artistSinglesBrowseId)}&params=${encodeURIComponent(state.artistSinglesParams)}`);
+    const data = await res.json();
+    const singles = data.albums || [];
+    let html = `<div class="px-6 pb-32 pt-[80px] max-w-[1800px] mx-auto"><div class="flex items-center gap-4 mb-8"><button onclick="loadArtist('${state.lastArtistId}')" class="w-8 h-8 bg-black/70 rounded-full flex items-center justify-center hover:bg-black"><i class="ri-arrow-left-s-line text-xl"></i></button><div><h1 class="text-[32px] font-bold">${escapeHtml(state.currentArtistName)}</h1><p class="text-zinc-400">${singles.length} singles & EPs</p></div></div>`;
+    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    singles.forEach(a => {
+      const id = a.id || a.browseId;
+      const img = getThumb(a, 400);
+      html += `<div onclick="loadAlbum('${id}')" class="group bg-[#181818] hover:bg-[#282828] p-4 rounded-lg cursor-pointer transition"><div class="relative mb-4"><img src="${img}" class="aspect-square w-full object-cover rounded shadow-lg" onerror="this.src='https://placehold.co/400x400/181818/535353?text=%E2%99%AA'"/><button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition flex items-center justify-center hover:scale-105"><i class="ri-play-fill text-black text-[26px] ml-0.5"></i></button></div><h3 class="font-bold text-[15px] truncate">${escapeHtml(a.title)}</h3><p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • Single</p></div>`;
+    });
+    html += `</div></div>`;
+    view.innerHTML = html;
+    view.parentElement.scrollTop = 0;
+  } catch(e) {
+    view.innerHTML = `<div class="px-6 pt-[80px]">Failed to load singles</div>`;
+  }
 }
 
 // Album
@@ -562,7 +633,7 @@ function renderAlbum(data) {
 // Playback
 async function playSong(song, queue=[], idx=0) {
   if (!song || !isPlayerReady) return;
-  
+
   state.queue = queue;
   state.index = idx;
   state.currentSong = song;
@@ -573,10 +644,42 @@ async function playSong(song, queue=[], idx=0) {
     player.playVideo();
   }, 100);
 
+  // Update Bottom Player UI
+  const artistName = song.artist || (song.artists && song.artists[0] ? song.artists[0].name : '-');
   $('#player-thumb').src = getThumb(song, 120);
   $('#player-title').textContent = song.title;
-  $('#player-artist').textContent = song.artist || (song.artists && song.artists[0] ? song.artists[0].name : '-');
+  $('#player-artist').textContent = artistName;
   $('#player').style.transform = 'translateY(0)';
+
+  updateAndroidMedia();
+}
+
+function updateAndroidMedia() {
+  if (window.Android && state.currentSong) {
+    const s = state.currentSong;
+    const artistName = s.artist || (s.artists && s.artists[0] ? s.artists[0].name : '-');
+    const artwork = getThumb(s, 512);
+
+    if (window.Android.updateMetadata) {
+        window.Android.updateMetadata(s.title, artistName, artwork);
+    }
+    if (window.Android.updatePlaybackState) {
+        const pos = player ? Math.floor(player.getCurrentTime() * 1000) : 0;
+        window.Android.updatePlaybackState(state.isPlaying, pos);
+    }
+  }
+}
+
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.PLAYING) {
+    state.isPlaying = true;
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    state.isPlaying = false;
+  } else if (event.data === YT.PlayerState.ENDED) {
+    nextTrack();
+  }
+  updatePlayButton();
+  updateAndroidMedia();
 }
 
 function updatePlayerUI() {
@@ -588,6 +691,11 @@ function updatePlayerUI() {
   const pct = total ? (current / total) * 100 : 0;
   $('#progress-fill').style.width = pct + '%';
   $('#progress-handle').style.left = pct + '%';
+
+  // Periodically update Android state to keep progress bar in sync
+  if (state.isPlaying && window.Android && window.Android.updatePlaybackState) {
+      window.Android.updatePlaybackState(true, Math.floor(current * 1000));
+  }
 }
 
 function updatePlayButton() {
@@ -631,6 +739,8 @@ $('#volume').addEventListener('input', e => {
 window.doSearch = doSearch;
 window.loadArtist = loadArtist;
 window.loadAlbum = loadAlbum;
+window.showAllAlbums = showAllAlbums;
+window.showAllSingles = showAllSingles;
 window.playSearchSong = (i) => playSong(state.searchSongs[i], state.searchSongs, i);
 window.playArtistSong = (i) => playSong(state.artistSongs[i], state.artistSongs, i);
 window.playAlbumSong = (i) => playSong(state.albumTracks[i], state.albumTracks, i);
