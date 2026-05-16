@@ -14,7 +14,7 @@
         "bootstrap-native/arm64-v8a/_datetime.cpython-311.so": "d4ea86c57f8fd3c990a1fa778baaaac11fa3bc46",
         "requirements-x86_64.imy": "b04f3ee8f5e43fa3b162981b50bb72fe1acabb33",
         "bootstrap-native/armeabi-v7a/_struct.cpython-311.so": "4af77b37fc2fc6319c041902e37ca5aa3e217873",
-        "app.imy": "af6139adf3d481d880a02f9a97dcc94c91dcda3e",
+        "app.imy": "342d2d8050d63b5e74a3a02626f1f0f7368ca020",
         "stdlib-common.imy": "3bcdd316ceb5312386dba7afb67f1f93aa6f5847",
         "bootstrap-native/armeabi-v7a/binascii.cpython-311.so": "6049e252eca1ef49fa9e2e21ed7ab31ccfc73f39",
         "bootstrap-native/arm64-v8a/binascii.cpython-311.so": "4eea1bde7571a32d05b8c2d68cea75783f1b4cf0",

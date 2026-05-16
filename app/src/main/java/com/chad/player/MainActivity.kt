@@ -10,6 +10,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.webkit.WebViewAssetLoader
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 
@@ -56,7 +57,18 @@ class MainActivity : AppCompatActivity() {
         }
         webView.settings.mediaPlaybackRequiresUserGesture = false
         webView.settings.allowUniversalAccessFromFileURLs = true
-        webView.webViewClient = WebViewClient()
+        webView.webViewClient = object : WebViewClient() {
+            private val assetLoader = WebViewAssetLoader.Builder()
+                .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this@MainActivity))
+                .build()
+
+            override fun shouldInterceptRequest(
+                view: WebView,
+                request: android.webkit.WebResourceRequest
+            ): android.webkit.WebResourceResponse? {
+                return assetLoader.shouldInterceptRequest(request.url)
+            }
+        }
 
         webView.addJavascriptInterface(WebAppInterface(), "Android")
 
@@ -72,7 +84,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        webView.loadUrl("file:///android_asset/www/index.html")
+        webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html")
     }
 
     inner class WebAppInterface {

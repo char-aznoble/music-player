@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Chad — Player</title>
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -100,23 +101,6 @@
   <!-- Player -->
   <footer id="player" class="h-[90px] bg-[#181818] border-t border-white/5 px-2 sm:px-4 flex items-center gap-2 sm:gap-4 translate-y-full transition-transform duration-300 shrink-0">
     <div id="yt-player"></div>
-<script src="https://www.youtube.com/iframe_api"></script>
-<script>
-let player;
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player('yt-player', {
-    height: '0', width: '0', // hidden audio-only
-    videoId: 'B1o2UCLvD38',
-    playerVars: { autoplay: 1, controls: 0 },
-    events: { onReady: e => e.target.playVideo() }
-  });
-}
-
-function playSong(song) {
-  player.loadVideoById(song.videoId);
-  // update your UI with song.title, artwork from ytmusicapi
-}
-</script>
     <div class="flex items-center gap-3 w-[55%] sm:w-[30%] min-w-[120px] max-w-[300px]">
       <img id="player-thumb" src="" class="w-14 h-14 rounded-[4px] object-cover bg-[#282828] shadow-md shrink-0" />
       <div class="min-w-0 block">
@@ -164,29 +148,6 @@ const API_BASE = 'http://127.0.0.1:8000';
 let player;
 let isPlayerReady = false;
 
-// YouTube API calls this automatically
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player('yt-player', {
-    height: '0',
-    width: '0',
-    playerVars: {
-      autoplay: 0,
-      controls: 0,
-      playsinline: 1
-    },
-    events: {
-      onReady: () => { isPlayerReady = true; },
-      onStateChange: onPlayerStateChange
-    }
-  });
-}
-
-function onPlayerStateChange(event) {
-  // Map YouTube states to your UI
-  state.isPlaying = (event.data === YT.PlayerState.PLAYING);
-  updatePlayButton();
-}
-
 let state = {
   queue: [],
   index: 0,
@@ -207,6 +168,40 @@ let state = {
 const $ = (s) => document.querySelector(s);
 const view = $('#view');
 
+// YouTube API calls this automatically
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('yt-player', {
+    height: '0',
+    width: '0',
+    playerVars: {
+      autoplay: 0,
+      controls: 0,
+      playsinline: 1
+    },
+    events: {
+      onReady: () => {
+        isPlayerReady = true;
+        setInterval(updatePlayerUI, 500);
+      },
+      onStateChange: onPlayerStateChange,
+      onError: (e) => {
+        console.error('YouTube error:', e.data);
+      }
+    }
+  });
+}
+
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.PLAYING) {
+    state.isPlaying = true;
+  } else if (event.data === YT.PlayerState.PAUSED) {
+    state.isPlaying = false;
+  } else if (event.data === YT.PlayerState.ENDED) {
+    nextTrack();
+  }
+  updatePlayButton();
+}
+
 // Navigation history
 function updateNavButtons() {
   const backBtn = $('#nav-back');
@@ -219,12 +214,14 @@ function updateNavButtons() {
     window.Android.setCanGoBack(canBack);
   }
 }
+
 function pushHistory(entry) {
   state.history = state.history.slice(0, state.historyIndex + 1);
   state.history.push(entry);
   state.historyIndex = state.history.length - 1;
   updateNavButtons();
 }
+
 function navigateTo(entry, fromHistory = false) {
   if (!fromHistory) pushHistory(entry);
   switch(entry.type) {
@@ -234,6 +231,7 @@ function navigateTo(entry, fromHistory = false) {
     case 'album': loadAlbum(entry.id, true); break;
   }
 }
+
 function navigateBack() {
   if (state.historyIndex > 0) {
     state.historyIndex--;
@@ -243,28 +241,37 @@ function navigateBack() {
   }
   return false;
 }
-function canNavigateBack() {
-  return state.historyIndex > 0;
-}
-function navigateForward() { if (state.historyIndex < state.history.length - 1) { state.historyIndex++; navigateTo(state.history[state.historyIndex], true); updateNavButtons(); } }
-function renderHome() { view.innerHTML = state.homeHTML; view.parentElement.scrollTop = 0; }
-function goHome() { navigateTo({type:'home'}); }
 
+function navigateForward() {
+  if (state.historyIndex < state.history.length - 1) {
+    state.historyIndex++;
+    navigateTo(state.history[state.historyIndex], true);
+    updateNavButtons();
+  }
+}
+
+function renderHome() {
+  view.innerHTML = state.homeHTML;
+  view.parentElement.scrollTop = 0;
+}
+
+function goHome() { navigateTo({type:'home'}); }
 
 function escapeHtml(s) {
   return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
 }
+
 function getThumb(item, prefer=300) {
   if(!item) return 'https://placehold.co/400x400/1a1a1a/404040?text=%E2%99%AA';
-  const thumbs = item.thumbnails || item.thumbnails || [];
+  const thumbs = item.thumbnails || [];
   if (thumbs.length) {
     const sorted = [...thumbs].sort((a,b)=>(a.width||0)-(b.width||0));
     const found = sorted.find(t => (t.width||0) >= prefer) || sorted[sorted.length-1];
     return found.url || found;
   }
-  if (item.thumbnail) return typeof item.thumbnail === 'string' ? item.thumbnail : item.thumbnail.url;
   return 'https://placehold.co/400x400/1a1a1a/404040?text=%E2%99%AA';
 }
+
 function formatDuration(d) {
   if (!d && d !== 0) return '';
   if (typeof d === 'number') {
@@ -283,12 +290,14 @@ $('#search').addEventListener('input', (e) => {
   if (!q) return;
   searchTimer = setTimeout(() => doSearch(q), 350);
 });
+
 $('#search').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { clearTimeout(searchTimer); doSearch(e.target.value.trim()); }
 });
 
 async function doSearch(q, fromHistory = false) {
   if (!q) return;
+  if (!fromHistory) pushHistory({type:'search', q});
   view.innerHTML = `<div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div>`;
   try {
     const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}`);
@@ -394,10 +403,6 @@ function renderArtist(data) {
   state.artistSongs = data.songs || [];
   state.artistAlbums = data.albums || [];
   state.artistSingles = data.singles || [];
-  state.artistAlbumsBrowseId = data.albumsBrowseId;
-  state.artistAlbumsParams = data.albumsParams;
-  state.artistSinglesBrowseId = data.singlesBrowseId;
-  state.artistSinglesParams = data.singlesParams;
   state.currentArtistName = data.name;
 
   let albums = state.artistAlbums;
@@ -420,12 +425,7 @@ function renderArtist(data) {
     <div class="relative pt-[160px] md:pt-[200px] pb-6 px-6 md:px-8 flex items-end gap-6">
       <img src="${avatar}" class="hidden md:block w-[200px] h-[200px] lg:w-[232px] lg:h-[232px] rounded-full object-cover shadow-[0_20px_60px_rgba(0,0,0,.8)] ring-[6px] ring-black/20" />
       <div class="pb-2">
-        <div class="flex items-center gap-2 mb-3">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="#3d91f4"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm-1.9 16.1-4.1-4.1 1.4-1.4 2.7 2.7 5.3-5.3 1.4-6.7 6.7z"/></svg>
-          <span class="text-sm font-medium">Verified Artist</span>
-        </div>
         <h1 class="text-[48px] md:text-[72px] lg:text-[96px] font-black leading-none tracking-tighter drop-shadow-2xl">${escapeHtml(data.name)}</h1>
-        <p class="mt-4 md:mt-6 text-[15px] text-white/90">${((data.views||data.subscribers||'0')+'').replace(/\B(?=(\d{3})+(?!\d))/g, ",")} monthly listeners</p>
       </div>
     </div>
   </div>
@@ -460,9 +460,9 @@ function renderArtist(data) {
   html += `</div></div>`;
 
   // Albums
-  html += `<section class="mt-12"><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold hover:underline cursor-pointer">Albums</h2>${state.artistAlbumsBrowseId ? `<button onclick="showAllAlbums()" class="text-sm font-bold text-zinc-400 hover:underline">View all albums</button>` : ''}</div>`;
   if (albums.length) {
-    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    html += `<section class="mt-12"><h2 class="text-2xl font-bold mb-5">Albums</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
     albums.forEach(a => {
       const id = a.id || a.browseId;
       const img = getThumb(a, 400);
@@ -475,16 +475,13 @@ function renderArtist(data) {
         <p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • Album</p>
       </div>`;
     });
-    html += `</div>`;
-  } else {
-    html += `<p class="text-zinc-500 py-8">No albums found</p>`;
+    html += `</div></section>`;
   }
-  html += `</section>`;
 
   // Singles
-  html += `<section class="mt-12 mb-16"><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold hover:underline cursor-pointer">Singles and EPs</h2>${state.artistSinglesBrowseId ? `<button onclick="showAllSingles()" class="text-sm font-bold text-zinc-400 hover:underline">View all</button>` : ''}</div>`;
   if (singles.length) {
-    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    html += `<section class="mt-12 mb-16"><h2 class="text-2xl font-bold mb-5">Singles and EPs</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
     singles.forEach(a => {
       const id = a.id || a.browseId;
       const img = getThumb(a, 400);
@@ -495,58 +492,12 @@ function renderArtist(data) {
         <p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • Single</p>
       </div>`;
     });
-    html += `</div>`;
-  } else {
-    html += `<p class="text-zinc-500 py-8">No singles found</p>`;
+    html += `</div></section>`;
   }
-  html += `</section></div>`;
+  html += `</div>`;
 
   view.innerHTML = html;
   view.parentElement.scrollTop = 0;
-}
-
-async function showAllAlbums() {
-  if (!state.artistAlbumsBrowseId || !state.artistAlbumsParams) return;
-  view.innerHTML = `<div class="px-6 pb-32 pt-[80px]"><h1 class="text-[32px] font-bold mb-2">${escapeHtml(state.currentArtistName)} — All Albums</h1><p class="text-zinc-400 mb-6">Loading complete discography...</p><div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div></div>`;
-  try {
-    const res = await fetch(`${API_BASE}/api/artist_albums?browseId=${encodeURIComponent(state.artistAlbumsBrowseId)}&params=${encodeURIComponent(state.artistAlbumsParams)}`);
-    const data = await res.json();
-    const albums = data.albums || [];
-    let html = `<div class="px-6 pb-32 pt-[80px] max-w-[1800px] mx-auto"><div class="flex items-center gap-4 mb-8"><button onclick="loadArtist('${state.lastArtistId}')" class="w-8 h-8 bg-black/70 rounded-full flex items-center justify-center hover:bg-black"><i class="ri-arrow-left-s-line text-xl"></i></button><div><h1 class="text-[32px] font-bold">${escapeHtml(state.currentArtistName)}</h1><p class="text-zinc-400">${albums.length} albums</p></div></div>`;
-    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
-    albums.forEach(a => {
-      const id = a.id || a.browseId;
-      const img = getThumb(a, 400);
-      html += `<div onclick="loadAlbum('${id}')" class="group bg-[#181818] hover:bg-[#282828] p-4 rounded-lg cursor-pointer transition"><div class="relative mb-4"><img src="${img}" class="aspect-square w-full object-cover rounded shadow-lg" onerror="this.src='https://placehold.co/400x400/181818/535353?text=%E2%99%AA'"/><button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition flex items-center justify-center hover:scale-105"><i class="ri-play-fill text-black text-[26px] ml-0.5"></i></button></div><h3 class="font-bold text-[15px] truncate">${escapeHtml(a.title)}</h3><p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • ${a.type||'Album'}</p></div>`;
-    });
-    html += `</div></div>`;
-    view.innerHTML = html;
-    view.parentElement.scrollTop = 0;
-  } catch(e) {
-    view.innerHTML = `<div class="px-6 pt-[80px]">Failed to load albums</div>`;
-  }
-}
-
-async function showAllSingles() {
-  if (!state.artistSinglesBrowseId || !state.artistSinglesParams) return;
-  view.innerHTML = `<div class="px-6 pb-32 pt-[80px]"><h1 class="text-[32px] font-bold mb-2">${escapeHtml(state.currentArtistName)} — All Singles</h1><div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div></div>`;
-  try {
-    const res = await fetch(`${API_BASE}/api/artist_albums?browseId=${encodeURIComponent(state.artistSinglesBrowseId)}&params=${encodeURIComponent(state.artistSinglesParams)}`);
-    const data = await res.json();
-    const singles = data.albums || [];
-    let html = `<div class="px-6 pb-32 pt-[80px] max-w-[1800px] mx-auto"><div class="flex items-center gap-4 mb-8"><button onclick="loadArtist('${state.lastArtistId}')" class="w-8 h-8 bg-black/70 rounded-full flex items-center justify-center hover:bg-black"><i class="ri-arrow-left-s-line text-xl"></i></button><div><h1 class="text-[32px] font-bold">${escapeHtml(state.currentArtistName)}</h1><p class="text-zinc-400">${singles.length} singles & EPs</p></div></div>`;
-    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
-    singles.forEach(a => {
-      const id = a.id || a.browseId;
-      const img = getThumb(a, 400);
-      html += `<div onclick="loadAlbum('${id}')" class="group bg-[#181818] hover:bg-[#282828] p-4 rounded-lg cursor-pointer transition"><div class="relative mb-4"><img src="${img}" class="aspect-square w-full object-cover rounded shadow-lg" onerror="this.src='https://placehold.co/400x400/181818/535353?text=%E2%99%AA'"/><button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition flex items-center justify-center hover:scale-105"><i class="ri-play-fill text-black text-[26px] ml-0.5"></i></button></div><h3 class="font-bold text-[15px] truncate">${escapeHtml(a.title)}</h3><p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • Single</p></div>`;
-    });
-    html += `</div></div>`;
-    view.innerHTML = html;
-    view.parentElement.scrollTop = 0;
-  } catch(e) {
-    view.innerHTML = `<div class="px-6 pt-[80px]">Failed to load singles</div>`;
-  }
 }
 
 // Album
@@ -586,39 +537,19 @@ function renderAlbum(data) {
         </div>
       </div>
     </div>
-
-    <div class="bg-gradient-to-b from-white/[0.07] to-transparent h-[232px] -mx-6 px-6 -mt-[268px] pt-[268px] pointer-events-none"></div>
-
     <div class="relative">
       <div class="flex items-center gap-6 py-6">
         <button onclick="playAlbum()" class="w-14 h-14 bg-[#1db954] hover:bg-[#1ed760] rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition"><i class="ri-play-fill text-black text-[32px] ml-0.5"></i></button>
-        <button class="text-zinc-400 hover:text-white text-[32px]"><i class="ri-heart-line"></i></button>
-        <button class="text-zinc-400 hover:text-white text-[24px]">•••</button>
       </div>
-
-      <div class="border-b border-white/10 sticky top-[64px] bg-[#121212]/95 backdrop-blur-md z-10 -mx-1 px-1">
-        <div class="grid grid-cols-[16px_1fr_50px] sm:grid-cols-[16px_4fr_2fr_50px] gap-4 px-4 h-9 items-center text-[13px] text-zinc-400 border-b border-white/[0.05]">
-          <div class="text-right">#</div>
-          <div>Title</div>
-          <div class="hidden sm:block">Plays</div>
-          <div class="text-right pr-2"><i class="ri-time-line text-[16px]"></i></div>
-        </div>
-      </div>
-
       <div class="mt-2">`;
 
   state.albumTracks.forEach((t,i) => {
-    t.artists = t.artists || data.artists;
-    t.thumbnails = t.thumbnails || data.thumbnails;
-    const plays = (Math.floor(Math.random()*5_000_000)+500_000).toLocaleString();
     html += `<div onclick="playAlbumSong(${i})" class="group grid grid-cols-[16px_1fr_50px] sm:grid-cols-[16px_4fr_2fr_50px] gap-4 px-4 h-[56px] items-center rounded hover:bg-white/10 cursor-pointer">
           <div class="text-[15px] text-zinc-400 text-right tabular-nums group-hover:hidden">${i+1}</div>
           <div class="hidden group-hover:block text-white"><i class="ri-play-fill"></i></div>
           <div class="min-w-0">
             <p class="truncate text-[15px] leading-tight ${state.currentSong?.videoId===t.videoId?'text-[#1db954]':''}">${escapeHtml(t.title)}</p>
-            <p class="sm:hidden text-[13px] text-zinc-400 truncate">${escapeHtml((t.artists||[]).map(a=>a.name).join(', '))}</p>
           </div>
-          <div class="hidden sm:block text-[14px] text-zinc-400 truncate">${plays}</div>
           <div class="text-[14px] text-zinc-400 text-right tabular-nums pr-2">${formatDuration(t.duration)}</div>
         </div>`;
   });
@@ -636,90 +567,51 @@ async function playSong(song, queue=[], idx=0) {
   state.index = idx;
   state.currentSong = song;
 
-  // Android 16: load first, then play after a tick
   player.loadVideoById(song.videoId);
   
-  // Wait for load, then play (keeps it in user gesture context)
   setTimeout(() => {
     player.playVideo();
   }, 100);
 
-  // update UI...
   $('#player-thumb').src = getThumb(song, 120);
   $('#player-title').textContent = song.title;
+  $('#player-artist').textContent = song.artist || (song.artists && song.artists[0] ? song.artists[0].name : '-');
+  $('#player').style.transform = 'translateY(0)';
 }
+
 function updatePlayerUI() {
   if (!isPlayerReady || !player.getDuration) return;
-  
   const current = player.getCurrentTime() || 0;
   const total = player.getDuration() || 0;
-  
   $('#time-current').textContent = formatDuration(current);
   $('#time-total').textContent = formatDuration(total);
-  
   const pct = total ? (current / total) * 100 : 0;
   $('#progress-fill').style.width = pct + '%';
   $('#progress-handle').style.left = pct + '%';
 }
+
 function updatePlayButton() {
   $('#play-pause').innerHTML = state.isPlaying ? '<i class="ri-pause-fill text-[26px]"></i>' : '<i class="ri-play-fill text-[26px] ml-0.5"></i>';
 }
+
 function togglePlay() {
   if (!isPlayerReady) return;
   if (state.isPlaying) { player.pauseVideo(); }
   else { player.playVideo(); }
 }
 
-function updatePlayerUI() {
-  if (!isPlayerReady) return;
-  const current = player.getCurrentTime() || 0;
-  const total = player.getDuration() || 0;
-  $('#time-current').textContent = formatDuration(current);
-  $('#time-total').textContent = formatDuration(total);
-  const pct = total? (current / total) * 100 : 0;
-  $('#progress-fill').style.width = pct + '%';
-}
 function nextTrack() {
   if (state.index < state.queue.length - 1) {
     playSong(state.queue[state.index + 1], state.queue, state.index + 1);
   }
 }
+
 function prevTrack() {
-  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+  if (!isPlayerReady) return;
+  if (player.getCurrentTime() > 3) { player.seekTo(0, true); return; }
   if (state.index > 0) {
     playSong(state.queue[state.index - 1], state.queue, state.index - 1);
   }
-}
-
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player('yt-player', {
-    height: '0',
-    width: '0',
-    playerVars: { autoplay: 0, controls: 0, playsinline: 1 },
-    events: {
-      onReady: () => { 
-        isPlayerReady = true;
-        // Start polling for time updates
-        setInterval(updatePlayerUI, 500);
-      },
-      onStateChange: (event) => {
-        // YouTube states: -1=unstarted, 0=ended, 1=playing, 2=paused, 3=buffering
-        if (event.data === YT.PlayerState.PLAYING) {
-          state.isPlaying = true;
-          updatePlayButton();
-        } else if (event.data === YT.PlayerState.PAUSED) {
-          state.isPlaying = false;
-          updatePlayButton();
-        } else if (event.data === YT.PlayerState.ENDED) {
-          nextTrack(); // your existing next track logic
-        }
-      },
-      onError: (e) => {
-        console.error('YouTube error:', e.data);
-        alert('Playback error: ' + e.data);
-      }
-    }
-  });
 }
 
 $('#progress').addEventListener('click', (e) => {
@@ -729,9 +621,9 @@ $('#progress').addEventListener('click', (e) => {
   const duration = player.getDuration();
   if (duration) player.seekTo(pct * duration, true);
 });
+
 $('#volume').addEventListener('input', e => {
   if (!isPlayerReady) return;
-  // YouTube volume is 0-100, your slider is 0-1
   player.setVolume(e.target.value * 100);
 });
 
@@ -739,8 +631,6 @@ $('#volume').addEventListener('input', e => {
 window.doSearch = doSearch;
 window.loadArtist = loadArtist;
 window.loadAlbum = loadAlbum;
-window.showAllAlbums = showAllAlbums;
-window.showAllSingles = showAllSingles;
 window.playSearchSong = (i) => playSong(state.searchSongs[i], state.searchSongs, i);
 window.playArtistSong = (i) => playSong(state.artistSongs[i], state.artistSongs, i);
 window.playAlbumSong = (i) => playSong(state.albumTracks[i], state.albumTracks, i);
@@ -759,8 +649,12 @@ document.addEventListener('DOMContentLoaded', () => {
   pushHistory({type:'home'});
 });
 
-// Demo: focus search on /
-window.addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement !== $('#search')) { e.preventDefault(); $('#search').focus(); } });
+window.addEventListener('keydown', (e) => {
+  if (e.key === '/' && document.activeElement !== $('#search')) {
+    e.preventDefault();
+    $('#search').focus();
+  }
+});
 </script>
 </body>
 </html>
