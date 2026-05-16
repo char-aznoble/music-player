@@ -579,19 +579,19 @@ async function playSong(song, queue=[], idx=0) {
   state.currentSong = song;
 
   const videoId = song.videoId;
-  const apiUrl = `${API_BASE}/api/stream?videoId=${videoId}`;
+  const artistNames = (song.artists||[]).map(a=>a.name).join(', ') || song.artist || '';
+  const query = `${song.title} ${artistNames}`.trim();
+  const apiUrl = `${API_BASE}/api/stream?videoId=${videoId}&query=${encodeURIComponent(query)}`;
 
   try {
     const res = await fetch(apiUrl);
-    // — this is the fix for "Unexpected token 'I'" —
     if (!res.ok) {
-      const text = await res.text(); // will be "Internal Server Error" if Python crashed
+      const text = await res.text();
       throw new Error(`Server ${res.status}: ${text.slice(0,100)}`);
     }
     const data = await res.json();
     if (!data.url) throw new Error(data.error || 'No stream URL returned');
 
-    // your code from 585-606, now with a real url
     audio.src = data.url;
     audio.crossOrigin = "anonymous";
     audio.play().then(() => {

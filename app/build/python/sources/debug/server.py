@@ -63,12 +63,39 @@ def album(bid: str):
 
 @app.get("/api/stream")
 def stream(videoId: str = None, query: str = None):
-    opts = {'format':'bestaudio[ext=m4a]/bestaudio/best','quiet':True,'no_warnings':True,'skip_download':True,'nocheckcertificate':True}
-    url = f"https://www.youtube.com/watch?v={videoId}" if videoId else f"ytsearch1:{query}"
-    with yt_dlp.YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=False)
-        if 'entries' in info: info = info['entries'][0]
-        return {"url": info.get('url')}
+    # If we have a videoId, we can still use it, but we'll prioritize a search-based
+    # approach if specifically requested, or just use the videoId to get the direct URL.
+    # The user wants to "scrape from youtube.com".
+
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'quiet': True,
+        'no_warnings': True,
+        'default_search': 'ytsearch',
+        'skip_download': True,
+        'noplaylist': True,
+        'nocheckcertificate': True,
+    }
+
+    # Construct a search query if only videoId is provided,
+    # or use the provided query (title + artist)
+    search_query = query
+    if not search_query and videoId:
+        search_query = f"https://www.youtube.com/watch?v={videoId}"
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(search_query, download=False)
+            if 'entries' in info:
+                info = info['entries'][0]
+
+            return {
+                "url": info.get('url'),
+                "title": info.get('title'),
+                "webpage_url": info.get('webpage_url')
+            }
+    except Exception as e:
+        return {"error": str(e)}
 def start_server():
     import uvicorn
     def run():
