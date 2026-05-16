@@ -106,9 +106,21 @@ def stream(videoId: str = None, query: str = None):
         print(f"Stream error: {e}")
         return {"error": str(e)}
 
+_server_thread = None
+
 def start_server():
+    global _server_thread
+    if _server_thread is not None:
+        print("Server already running")
+        return
+
     import uvicorn
     def run():
-        uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")
-    t = threading.Thread(target=run, daemon=True)
-    t.start()
+        try:
+            uvicorn.run(app, host="127.0.0.1", port=8000, log_level="info")
+        except Exception as e:
+            print(f"Uvicorn error: {e}")
+
+    _server_thread = threading.Thread(target=run, daemon=True)
+    _server_thread.start()
+    print("Server started")

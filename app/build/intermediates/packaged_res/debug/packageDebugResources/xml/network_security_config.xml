@@ -1,20 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Allow your local Python server -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">127.0.0.1</domain>
-        <domain includeSubdomains="true">localhost</domain>
-    </domain-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
     
-    <!-- Allow YouTube domains for the iframe -->
+    <!-- Keep YouTube domains explicit -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">youtube.com</domain>
-        <domain includeSubdomains="true">youtube-nocookie.com</domain>
         <domain includeSubdomains="true">googlevideo.com</domain>
         <domain includeSubdomains="true">ytimg.com</domain>
-        <domain includeSubdomains="true">gstatic.com</domain>
     </domain-config>
-    
-    <!-- Default: block cleartext for everything else -->
-    <base-config cleartextTrafficPermitted="false" />
 </network-security-config>
