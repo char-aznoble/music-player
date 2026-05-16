@@ -181,6 +181,11 @@ function onYouTubeIframeAPIReady() {
     events: {
       onReady: () => {
         isPlayerReady = true;
+
+        // --- TRICK YOUTUBE INTO THINKING WE ARE ALWAYS VISIBLE ---
+        Object.defineProperty(document, 'hidden', { value: false, writable: false });
+        Object.defineProperty(document, 'visibilityState', { value: 'visible', writable: false });
+
         setInterval(updatePlayerUI, 500);
       },
       onStateChange: onPlayerStateChange,
@@ -191,6 +196,11 @@ function onYouTubeIframeAPIReady() {
   });
 }
 
+// Prevent visibility change events from reaching the player
+document.addEventListener('visibilitychange', (e) => {
+  e.stopImmediatePropagation();
+}, true);
+
 function onPlayerStateChange(event) {
   if (event.data === YT.PlayerState.PLAYING) {
     state.isPlaying = true;
@@ -200,23 +210,11 @@ function onPlayerStateChange(event) {
     nextTrack();
   }
   updatePlayButton();
-  updateAndroidMedia();
-}
 
-function updateAndroidMedia() {
+  // Update Android only when the state TRULY changes to prevent recursive loop
   if (window.Android && state.currentSong) {
-    const s = state.currentSong;
-    const artistName = s.artist || (s.artists && s.artists[0] ? s.artists[0].name : '-');
-    const artwork = getThumb(s, 512);
-
-    // Call Android to update system media controls
-    if (window.Android.updateMetadata) {
-        window.Android.updateMetadata(s.title, artistName, artwork);
-    }
-    if (window.Android.updatePlaybackState) {
-        const pos = player ? Math.floor(player.getCurrentTime() * 1000) : 0;
-        window.Android.updatePlaybackState(state.isPlaying, pos);
-    }
+      const pos = player ? Math.floor(player.getCurrentTime() * 1000) : 0;
+      window.Android.updatePlaybackState(state.isPlaying, pos);
   }
 }
 
@@ -269,6 +267,7 @@ function navigateForward() {
 }
 
 function renderHome() {
+  $('#search').value = '';
   view.innerHTML = state.homeHTML;
   view.parentElement.scrollTop = 0;
 }
@@ -305,7 +304,7 @@ let searchTimer;
 $('#search').addEventListener('input', (e) => {
   clearTimeout(searchTimer);
   const q = e.target.value.trim();
-  if (!q) return;
+  if (!q) { goHome(); return; }
   searchTimer = setTimeout(() => doSearch(q), 350);
 });
 
@@ -315,6 +314,7 @@ $('#search').addEventListener('keydown', (e) => {
 
 async function doSearch(q, fromHistory = false) {
   if (!q) return;
+  if (fromHistory) $('#search').value = q;
   if (!fromHistory) pushHistory({type:'search', q});
   view.innerHTML = `<div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div>`;
   try {
@@ -651,22 +651,10 @@ async function playSong(song, queue=[], idx=0) {
   $('#player-artist').textContent = artistName;
   $('#player').style.transform = 'translateY(0)';
 
-  updateAndroidMedia();
-}
-
-function updateAndroidMedia() {
-  if (window.Android && state.currentSong) {
-    const s = state.currentSong;
-    const artistName = s.artist || (s.artists && s.artists[0] ? s.artists[0].name : '-');
-    const artwork = getThumb(s, 512);
-
-    if (window.Android.updateMetadata) {
-        window.Android.updateMetadata(s.title, artistName, artwork);
-    }
-    if (window.Android.updatePlaybackState) {
-        const pos = player ? Math.floor(player.getCurrentTime() * 1000) : 0;
-        window.Android.updatePlaybackState(state.isPlaying, pos);
-    }
+  // Tell Android about the new track
+  if (window.Android && window.Android.updateMetadata) {
+    const artwork = getThumb(song, 512);
+    window.Android.updateMetadata(song.title, artistName, artwork);
   }
 }
 
@@ -679,7 +667,12 @@ function onPlayerStateChange(event) {
     nextTrack();
   }
   updatePlayButton();
-  updateAndroidMedia();
+
+  // Minimal update to Android to avoid recursion
+  if (window.Android && window.Android.updatePlaybackState && state.currentSong) {
+      const pos = player ? Math.floor(player.getCurrentTime() * 1000) : 0;
+      window.Android.updatePlaybackState(state.isPlaying, pos);
+  }
 }
 
 function updatePlayerUI() {
@@ -691,11 +684,6 @@ function updatePlayerUI() {
   const pct = total ? (current / total) * 100 : 0;
   $('#progress-fill').style.width = pct + '%';
   $('#progress-handle').style.left = pct + '%';
-
-  // Periodically update Android state to keep progress bar in sync
-  if (state.isPlaying && window.Android && window.Android.updatePlaybackState) {
-      window.Android.updatePlaybackState(true, Math.floor(current * 1000));
-  }
 }
 
 function updatePlayButton() {
