@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chad — Player</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #535353; border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: #727272; }
+  .scrollbar-thin::-webkit-scrollbar { height: 6px; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body class="bg-black text-white antialiased select-none">
+<div class="h-screen flex flex-col overflow-hidden">
+  <div class="flex-1 flex gap-2 p-2 overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="hidden lg:flex w-[280px] xl:w-[340px] flex-col gap-2 shrink-0">
+      <div class="bg-[#121212] rounded-lg p-2">
+        <a onclick="goHome()" class="flex items-center gap-4 px-4 py-2.5 rounded-md hover:bg-white/5 transition font-semibold cursor-pointer"><i class="ri-home-5-fill text-2xl"></i>Home</a>
+        <a onclick="document.getElementById('search').focus()" class="flex items-center gap-4 px-4 py-2.5 rounded-md hover:bg-white/5 transition text-zinc-400 hover:text-white cursor-pointer"><i class="ri-search-line text-2xl"></i>Search</a>
+      </div>
+      <div class="bg-[#121212] rounded-lg flex-1 flex flex-col min-h-0">
+        <div class="p-4 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-3 text-zinc-400 hover:text-white cursor-pointer transition">
+            <i class="ri-stack-line text-2xl"></i>
+            <span class="font-semibold">Your Library</span>
+          </div>
+        </div>
+        <div class="px-2 pb-2 space-y-1 overflow-y-auto">
+          <div class="p-3 rounded-md bg-[#242424] hover:bg-[#2a2a2a] cursor-pointer">
+            <p class="font-medium">Liked Songs</p>
+            <p class="text-sm text-zinc-400 mt-1">Playlist • 127 songs</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 bg-[#121212] rounded-lg flex flex-col min-w-0 relative overflow-hidden">
+      <header class="absolute top-0 left-0 right-0 z-30 flex items-center gap-3 px-4 h-[64px] bg-[#121212]/80 backdrop-blur-xl">
+        <div class="hidden md:flex items-center gap-2">
+          <button id="nav-back" onclick="navigateBack()" class="w-8 h-8 bg-black/70 rounded-full flex items-center justify-center hover:bg-black transition-opacity"><i class="ri-arrow-left-s-line text-xl"></i></button>
+          <button id="nav-forward" onclick="navigateForward()" class="w-8 h-8 bg-black/70 rounded-full flex items-center justify-center hover:bg-black opacity-60 transition-opacity"><i class="ri-arrow-right-s-line text-xl"></i></button>
+        </div>
+        <div class="flex-1 max-w-[364px] relative">
+          <i class="ri-search-line absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-[18px] pointer-events-none"></i>
+          <input id="search" placeholder="What do you want to play?" class="w-full h-12 bg-[#242424] hover:bg-[#2a2a2a] focus:bg-[#2a2a2a] focus:outline-none focus:ring-2 focus:ring-white rounded-full pl-10 pr-4 text-[14px] placeholder-zinc-400 transition" />
+        </div>
+        <div class="flex items-center gap-2 ml-auto">
+          <button class="hidden sm:flex items-center gap-2 bg-white text-black font-bold text-sm px-4 h-8 rounded-full hover:scale-105 transition">Explore Premium</button>
+          <button class="w-8 h-8 bg-[#535353] rounded-full flex items-center justify-center font-semibold">U</button>
+        </div>
+      </header>
+
+      <div id="content" class="flex-1 overflow-y-auto overflow-x-hidden">
+        <div class="pt-[64px]">
+          <!-- Dynamic content -->
+          <div id="view" class="px-6 pb-32">
+            <div class="mt-16 max-w-[1800px] mx-auto">
+              <h1 class="text-[32px] font-bold mb-6">Good afternoon</h1>
+              <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-4 mb-10">
+                <div onclick="doSearch('The Weeknd')" class="group flex items-center gap-4 bg-white/10 hover:bg-white/20 rounded-md cursor-pointer transition h-[64px] sm:h-[80px] overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200" class="w-[64px] h-[64px] sm:w-[80px] sm:h-[80px] object-cover shrink-0 shadow-lg" />
+                  <span class="font-semibold truncate pr-2">The Weeknd</span>
+                  <button class="ml-auto mr-3 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all flex items-center justify-center shrink-0"><i class="ri-play-fill text-black text-2xl ml-0.5"></i></button>
+                </div>
+                <div onclick="doSearch('Drake')" class="group flex items-center gap-4 bg-white/10 hover:bg-white/20 rounded-md cursor-pointer transition h-[64px] sm:h-[80px] overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=200" class="w-[64px] h-[64px] sm:w-[80px] sm:h-[80px] object-cover shrink-0" />
+                  <span class="font-semibold truncate pr-2">Drake</span>
+                  <button class="ml-auto mr-3 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all flex items-center justify-center shrink-0"><i class="ri-play-fill text-black text-2xl ml-0.5"></i></button>
+                </div>
+                <div onclick="doSearch('Taylor Swift')" class="group flex items-center gap-4 bg-white/10 hover:bg-white/20 rounded-md cursor-pointer transition h-[64px] sm:h-[80px] overflow-hidden">
+                  <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=200" class="w-[64px] h-[64px] sm:w-[80px] sm:h-[80px] object-cover shrink-0" />
+                  <span class="font-semibold truncate pr-2">Taylor Swift</span>
+                  <button class="ml-auto mr-3 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all flex items-center justify-center shrink-0"><i class="ri-play-fill text-black text-2xl ml-0.5"></i></button>
+                </div>
+              </div>
+              <div class="text-center py-20 text-zinc-500">
+                <i class="ri-music-2-line text-6xl mb-4 block opacity-30"></i>
+                <p>Search for artists, songs, or albums</p>
+                <p class="text-sm mt-2">Using YouTube Music backend at localhost:8000</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Player -->
+  <footer id="player" class="h-[90px] bg-[#181818] border-t border-white/5 px-2 sm:px-4 flex items-center gap-2 sm:gap-4 translate-y-full transition-transform duration-300 shrink-0">
+    <div class="flex items-center gap-3 w-[55%] sm:w-[30%] min-w-[120px] max-w-[300px]">
+      <img id="player-thumb" src="" class="w-14 h-14 rounded-[4px] object-cover bg-[#282828] shadow-md shrink-0" />
+      <div class="min-w-0 block">
+        <div id="player-title" class="text-[14px] leading-tight truncate hover:underline cursor-pointer">Not Playing</div>
+        <div id="player-artist" class="text-[11px] text-zinc-400 truncate hover:underline hover:text-white cursor-pointer">-</div>
+      </div>
+      <button class="hidden sm:block text-zinc-400 hover:text-white ml-1"><i class="ri-heart-line"></i></button>
+    </div>
+
+    <div class="flex-1 max-w-[722px] flex flex-col items-center gap-1.5 px-2">
+      <div class="flex items-center gap-3 sm:gap-5">
+        <button class="hidden sm:block text-zinc-400 hover:text-white transition"><i class="ri-shuffle-line text-[16px]"></i></button>
+        <button onclick="prevTrack()" class="text-zinc-400 hover:text-white transition"><i class="ri-skip-back-fill text-[22px]"></i></button>
+        <button id="play-pause" onclick="togglePlay()" class="w-8 h-8 bg-white hover:bg-zinc-200 rounded-full flex items-center justify-center text-black hover:scale-105 transition">
+          <i class="ri-play-fill text-2xl ml-0.5"></i>
+        </button>
+        <button onclick="nextTrack()" class="text-zinc-400 hover:text-white transition"><i class="ri-skip-forward-fill text-[22px]"></i></button>
+        <button class="hidden sm:block text-zinc-400 hover:text-white transition"><i class="ri-repeat-2-line text-[16px]"></i></button>
+      </div>
+      <div class="w-full flex items-center gap-2">
+        <span id="time-current" class="text-[11px] text-zinc-400 w-[40px] text-right tabular-nums">0:00</span>
+        <div id="progress" class="flex-1 h-[4px] group cursor-pointer">
+          <div class="w-full h-full bg-white/20 rounded-full relative overflow-hidden group-hover:h-[5px] transition-all">
+            <div id="progress-fill" class="absolute h-full bg-white group-hover:bg-[#1db954] w-0 rounded-full"></div>
+            <div id="progress-handle" class="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 group-hover:opacity-100 -ml-1.5 transition-opacity" style="left:0%"></div>
+          </div>
+        </div>
+        <span id="time-total" class="text-[11px] text-zinc-400 w-[40px] tabular-nums">0:00</span>
+      </div>
+    </div>
+
+    <div class="hidden md:flex items-center gap-3 w-[30%] max-w-[300px] justify-end">
+      <button class="text-zinc-400 hover:text-white"><i class="ri-mic-line"></i></button>
+      <div class="flex items-center gap-2 group w-28">
+        <i class="ri-volume-up-line text-zinc-400 group-hover:text-white"></i>
+        <input id="volume" type="range" min="0" max="1" step="0.01" value="0.7" class="w-full h-1 accent-white hover:accent-[#1db954] cursor-pointer">
+      </div>
+      <button class="text-zinc-400 hover:text-white"><i class="ri-fullscreen-line"></i></button>
+    </div>
+  </footer>
+</div>
+
+<script>
+const API_BASE = 'http://127.0.0.1:8000';
+const audio = new Audio();
+audio.crossOrigin = 'anonymous';
+audio.volume = 0.7;
+
+let state = {
+  queue: [],
+  index: 0,
+  currentSong: null,
+  searchSongs: [],
+  searchArtists: [],
+  searchAlbums: [],
+  artistSongs: [],
+  artistAlbums: [],
+  artistSingles: [],
+  albumTracks: [],
+  isPlaying: false,
+  history: [],
+  historyIndex: -1,
+  homeHTML: ''
+};
+
+const $ = (s) => document.querySelector(s);
+const view = $('#view');
+
+// Navigation history
+function updateNavButtons() {
+  const backBtn = $('#nav-back');
+  const fwdBtn = $('#nav-forward');
+  if (backBtn) backBtn.style.opacity = state.historyIndex > 0 ? '1' : '0.6';
+  if (fwdBtn) fwdBtn.style.opacity = state.historyIndex < state.history.length - 1 ? '1' : '0.6';
+}
+function pushHistory(entry) {
+  state.history = state.history.slice(0, state.historyIndex + 1);
+  state.history.push(entry);
+  state.historyIndex = state.history.length - 1;
+  updateNavButtons();
+}
+function navigateTo(entry, fromHistory = false) {
+  if (!fromHistory) pushHistory(entry);
+  switch(entry.type) {
+    case 'home': renderHome(); break;
+    case 'search': doSearch(entry.q, true); break;
+    case 'artist': loadArtist(entry.id, true); break;
+    case 'album': loadAlbum(entry.id, true); break;
+  }
+}
+function navigateBack() { if (state.historyIndex > 0) { state.historyIndex--; navigateTo(state.history[state.historyIndex], true); updateNavButtons(); } }
+function navigateForward() { if (state.historyIndex < state.history.length - 1) { state.historyIndex++; navigateTo(state.history[state.historyIndex], true); updateNavButtons(); } }
+function renderHome() { view.innerHTML = state.homeHTML; view.parentElement.scrollTop = 0; }
+function goHome() { navigateTo({type:'home'}); }
+
+
+function escapeHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+}
+function getThumb(item, prefer=300) {
+  if(!item) return 'https://placehold.co/400x400/1a1a1a/404040?text=%E2%99%AA';
+  const thumbs = item.thumbnails || item.thumbnails || [];
+  if (thumbs.length) {
+    const sorted = [...thumbs].sort((a,b)=>(a.width||0)-(b.width||0));
+    const found = sorted.find(t => (t.width||0) >= prefer) || sorted[sorted.length-1];
+    return found.url || found;
+  }
+  if (item.thumbnail) return typeof item.thumbnail === 'string' ? item.thumbnail : item.thumbnail.url;
+  return 'https://placehold.co/400x400/1a1a1a/404040?text=%E2%99%AA';
+}
+function formatDuration(d) {
+  if (!d && d !== 0) return '';
+  if (typeof d === 'number') {
+    const m = Math.floor(d/60); const s = Math.floor(d%60).toString().padStart(2,'0');
+    return `${m}:${s}`;
+  }
+  if (typeof d === 'string') return d;
+  return '';
+}
+
+// Search
+let searchTimer;
+$('#search').addEventListener('input', (e) => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if (!q) return;
+  searchTimer = setTimeout(() => doSearch(q), 350);
+});
+$('#search').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { clearTimeout(searchTimer); doSearch(e.target.value.trim()); }
+});
+
+async function doSearch(q, fromHistory = false) {
+  if (!q) return;
+  view.innerHTML = `<div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div>`;
+  try {
+    const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    renderSearch(data);
+  } catch (err) {
+    view.innerHTML = `<div class="py-24 text-center text-zinc-500">Failed to search. Is backend running at ${API_BASE}?</div>`;
+  }
+}
+
+function renderSearch(data) {
+  state.searchArtists = data.artists || [];
+  state.searchSongs = data.songs || [];
+  state.searchAlbums = data.albums || [];
+
+  let html = `<div class="max-w-[1800px] mx-auto space-y-10 pb-10">`;
+
+  // Artists
+  if (state.searchArtists.length) {
+    html += `<section><h2 class="text-2xl font-bold mb-5 hover:underline cursor-pointer">Artists</h2>
+      <div class="flex gap-5 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">`;
+    state.searchArtists.forEach(a => {
+      const id = a.id || a.browseId || a.channelId;
+      const img = getThumb(a, 320);
+      html += `<div onclick="loadArtist('${id}')" class="group shrink-0 w-[190px] bg-[#181818] hover:bg-[#282828] p-4 rounded-lg cursor-pointer transition">
+        <div class="relative">
+          <img src="${img}" class="w-[158px] h-[158px] rounded-full object-cover shadow-[0_8px_24px_rgba(0,0,0,.6)] mx-auto" onerror="this.src='https://placehold.co/300x300/181818/535353?text=%E2%99%AA'"/>
+          <button class="absolute bottom-1 right-3 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition flex items-center justify-center hover:scale-105 hover:bg-[#1ed760]"><i class="ri-play-fill text-black text-[26px] ml-0.5"></i></button>
+        </div>
+        <div class="mt-4">
+          <h3 class="font-bold truncate">${escapeHtml(a.name)}</h3>
+          <p class="text-[14px] text-zinc-400 mt-0.5">Artist</p>
+        </div>
+      </div>`;
+    });
+    html += `</div></section>`;
+  }
+
+  // Songs
+  if (state.searchSongs.length) {
+    html += `<section><h2 class="text-2xl font-bold mb-5 hover:underline cursor-pointer">Songs</h2>
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-x-6 gap-y-1">`;
+    state.searchSongs.slice(0, 8).forEach((s,i) => {
+      const img = getThumb(s, 100);
+      const artists = (s.artists||[]).map(a=>a.name).join(', ');
+      html += `<div onclick="playSearchSong(${i})" class="group flex items-center gap-3 p-2 rounded-md hover:bg-white/[0.07] cursor-pointer">
+        <div class="relative shrink-0">
+          <img src="${img}" class="w-12 h-12 rounded-[4px] object-cover" onerror="this.src='https://placehold.co/100x100/282828/fff?text=%E2%99%AA'"/>
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-[4px] transition"><i class="ri-play-fill text-xl"></i></div>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-[15px] leading-tight ${state.currentSong?.videoId===s.videoId?'text-[#1db954]':''}">${escapeHtml(s.title)}</p>
+          <p class="text-[13px] text-zinc-400 truncate">${escapeHtml(artists)}</p>
+        </div>
+        <div class="text-[14px] text-zinc-400 w-10 text-right">${formatDuration(s.duration)}</div>
+        <button class="opacity-0 group-hover:opacity-100 w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-white"><i class="ri-heart-line"></i></button>
+      </div>`;
+    });
+    html += `</div></section>`;
+  }
+
+  // Albums
+  if (state.searchAlbums.length) {
+    html += `<section><h2 class="text-2xl font-bold mb-5 hover:underline cursor-pointer">Albums</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    state.searchAlbums.forEach(al => {
+      const id = al.id || al.browseId;
+      const img = getThumb(al, 400);
+      const artist = (al.artists||[]).map(a=>a.name).join(', ');
+      html += `<div onclick="loadAlbum('${id}')" class="group bg-[#181818] hover:bg-[#282828] p-4 rounded-lg cursor-pointer transition-all hover:shadow-2xl">
+        <div class="relative mb-4">
+          <img src="${img}" class="aspect-square w-full object-cover rounded-md shadow-[0_8px_24px_rgba(0,0,0,.5)]" onerror="this.src='https://placehold.co/400x400/181818/535353?text=%E2%99%AA'"/>
+          <button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition flex items-center justify-center hover:scale-105 hover:bg-[#1ed760]"><i class="ri-play-fill text-black text-[26px] ml-0.5"></i></button>
+        </div>
+        <h3 class="font-semibold text-[15px] line-clamp-2 leading-snug min-h-[40px]">${escapeHtml(al.title || al.name)}</h3>
+        <p class="text-[13px] text-zinc-400 mt-1 line-clamp-1">${al.year || ''} ${al.year && artist ? '•' : ''} ${escapeHtml(artist)}</p>
+      </div>`;
+    });
+    html += `</div></section>`;
+  }
+
+  html += `</div>`;
+  view.innerHTML = html;
+  view.parentElement.scrollTop = 0;
+}
+
+// Artist
+async function loadArtist(id, fromHistory = false) {
+  if (!id || id === 'undefined') return;
+  if (!fromHistory) pushHistory({type:'artist', id});
+  state.lastArtistId = id;
+  view.innerHTML = `<div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div>`;
+  try {
+    const res = await fetch(`${API_BASE}/api/artist/${id}`);
+    const data = await res.json();
+    renderArtist(data);
+  } catch (e) {
+    view.innerHTML = `<div class="py-24 text-center text-zinc-500">Failed to load artist</div>`;
+  }
+}
+
+function renderArtist(data) {
+  state.artistSongs = data.songs || [];
+  state.artistAlbums = data.albums || [];
+  state.artistSingles = data.singles || [];
+  state.artistAlbumsBrowseId = data.albumsBrowseId;
+  state.artistAlbumsParams = data.albumsParams;
+  state.artistSinglesBrowseId = data.singlesBrowseId;
+  state.artistSinglesParams = data.singlesParams;
+  state.currentArtistName = data.name;
+
+  let albums = state.artistAlbums;
+  let singles = state.artistSingles;
+  if (!singles.length && albums.length) {
+    singles = albums.filter(a => (a.type||'').toLowerCase().includes('single'));
+    albums = albums.filter(a => !singles.includes(a));
+  }
+
+  const hero = getThumb(data, 1200);
+  const avatar = getThumb(data, 400);
+
+  let html = `
+  <div class="-mx-6 -mt-[64px] relative">
+    <div class="absolute inset-0 h-[400px] md:h-[480px] overflow-hidden">
+      <img src="${hero}" class="w-full h-full object-cover scale-105 blur-[2px]" />
+      <div class="absolute inset-0 bg-gradient-to-t from-[#121212] via-[#121212]/80 to-[#121212]/40"></div>
+      <div class="absolute inset-0 bg-[#121212] opacity-40 mix-blend-multiply"></div>
+    </div>
+    <div class="relative pt-[160px] md:pt-[200px] pb-6 px-6 md:px-8 flex items-end gap-6">
+      <img src="${avatar}" class="hidden md:block w-[200px] h-[200px] lg:w-[232px] lg:h-[232px] rounded-full object-cover shadow-[0_20px_60px_rgba(0,0,0,.8)] ring-[6px] ring-black/20" />
+      <div class="pb-2">
+        <div class="flex items-center gap-2 mb-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#3d91f4"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm-1.9 16.1-4.1-4.1 1.4-1.4 2.7 2.7 5.3-5.3 1.4-6.7 6.7z"/></svg>
+          <span class="text-sm font-medium">Verified Artist</span>
+        </div>
+        <h1 class="text-[48px] md:text-[72px] lg:text-[96px] font-black leading-none tracking-tighter drop-shadow-2xl">${escapeHtml(data.name)}</h1>
+        <p class="mt-4 md:mt-6 text-[15px] text-white/90">${((data.views||data.subscribers||'0')+'').replace(/\B(?=(\d{3})+(?!\d))/g, ",")} monthly listeners</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-1 md:px-2 max-w-[1800px]">
+    <div class="flex items-center gap-6 py-6">
+      <button onclick="playArtist()" class="w-14 h-14 bg-[#1db954] hover:bg-[#1ed760] rounded-full flex items-center justify-center shadow-[0_8px_16px_rgba(0,0,0,.3)] hover:scale-105 transition"><i class="ri-play-fill text-black text-[32px] ml-0.5"></i></button>
+      <button class="h-8 px-4 border border-zinc-500 hover:border-white rounded-full text-sm font-bold hover:scale-105 transition">Follow</button>
+      <button class="text-zinc-400 hover:text-white text-[28px] leading-none">•••</button>
+    </div>
+
+    <div class="mt-2">
+      <h2 class="text-2xl font-bold mb-4">Popular</h2>
+      <div class="max-w-[1100px]">`;
+
+  state.artistSongs.slice(0, 10).forEach((s,i) => {
+    const img = getThumb(s, 80);
+    const artists = (s.artists||[]).map(a=>a.name).join(', ') || data.name;
+    html += `<div onclick="playArtistSong(${i})" class="group grid grid-cols-[20px_1fr_70px] sm:grid-cols-[20px_56px_1fr_120px_56px] items-center gap-3 sm:gap-4 px-3 sm:px-4 h-[56px] rounded hover:bg-white/10 cursor-pointer">
+        <div class="text-[15px] text-zinc-400 text-right tabular-nums group-hover:hidden">${i+1}</div>
+        <div class="hidden group-hover:block text-white pl-1"><i class="ri-play-fill"></i></div>
+        <img src="${img}" class="hidden sm:block w-10 h-10 rounded-sm object-cover" />
+        <div class="min-w-0">
+          <p class="truncate text-[15px] ${state.currentSong?.videoId===s.videoId?'text-[#1db954]':''}">${escapeHtml(s.title)}</p>
+          <p class="sm:hidden text-[13px] text-zinc-400 truncate">${escapeHtml(artists)}</p>
+        </div>
+        <div class="hidden sm:block text-[14px] text-zinc-400 truncate hover:underline hover:text-white">${escapeHtml(artists)}</div>
+        <div class="text-[14px] text-zinc-400 text-right tabular-nums">${formatDuration(s.duration)}</div>
+      </div>`;
+  });
+
+  html += `</div></div>`;
+
+  // Albums
+  html += `<section class="mt-12"><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold hover:underline cursor-pointer">Albums</h2>${state.artistAlbumsBrowseId ? `<button onclick="showAllAlbums()" class="text-sm font-bold text-zinc-400 hover:underline hidden sm:block">View all albums</button>` : ''}</div>`;
+  if (albums.length) {
+    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    albums.forEach(a => {
+      const id = a.id || a.browseId;
+      const img = getThumb(a, 400);
+      html += `<div onclick="loadAlbum('${id}')" class="group bg-[#181818] hover:bg-[#282828] p-4 rounded-lg cursor-pointer transition">
+        <div class="relative mb-4">
+          <img src="${img}" class="aspect-square w-full object-cover rounded shadow-lg" onerror="this.src='https://placehold.co/400x400/181818/535353?text=%E2%99%AA'"/>
+          <button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition flex items-center justify-center hover:scale-105"><i class="ri-play-fill text-black text-[26px] ml-0.5"></i></button>
+        </div>
+        <h3 class="font-bold text-[15px] truncate">${escapeHtml(a.title||a.name)}</h3>
+        <p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • Album</p>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<p class="text-zinc-500 py-8">No albums found</p>`;
+  }
+  html += `</section>`;
+
+  // Singles
+  html += `<section class="mt-12 mb-16"><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold hover:underline cursor-pointer">Singles and EPs</h2>${state.artistSinglesBrowseId ? `<button onclick="showAllSingles()" class="text-sm font-bold text-zinc-400 hover:underline hidden sm:block">View all</button>` : ''}</div>`;
+  if (singles.length) {
+    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    singles.forEach(a => {
+      const id = a.id || a.browseId;
+      const img = getThumb(a, 400);
+      html += `<div onclick="loadAlbum('${id}')" class="group bg-[#181818] hover:bg-[#282828] p-4 rounded-lg cursor-pointer transition">
+        <div class="relative mb-4"><img src="${img}" class="aspect-square w-full object-cover rounded shadow-lg" onerror="this.src='https://placehold.co/400x400/181818/535353?text=%E2%99%AA'"/>
+        <button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition flex items-center justify-center hover:scale-105"><i class="ri-play-fill text-black text-[26px] ml-0.5"></i></button></div>
+        <h3 class="font-bold text-[15px] truncate">${escapeHtml(a.title||a.name)}</h3>
+        <p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • Single</p>
+      </div>`;
+    });
+    html += `</div>`;
+  } else {
+    html += `<p class="text-zinc-500 py-8">No singles found</p>`;
+  }
+  html += `</section></div>`;
+
+  view.innerHTML = html;
+  view.parentElement.scrollTop = 0;
+}
+
+async function showAllAlbums() {
+  if (!state.artistAlbumsBrowseId || !state.artistAlbumsParams) return;
+  view.innerHTML = `<div class="px-6 pb-32 pt-[80px]"><h1 class="text-[32px] font-bold mb-2">${escapeHtml(state.currentArtistName)} — All Albums</h1><p class="text-zinc-400 mb-6">Loading complete discography...</p><div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div></div>`;
+  try {
+    const res = await fetch(`${API_BASE}/api/artist_albums?browseId=${encodeURIComponent(state.artistAlbumsBrowseId)}&params=${encodeURIComponent(state.artistAlbumsParams)}`);
+    const data = await res.json();
+    const albums = data.albums || [];
+    let html = `<div class="px-6 pb-32 pt-[80px] max-w-[1800px] mx-auto"><div class="flex items-center gap-4 mb-8"><button onclick="loadArtist('${state.lastArtistId}')" class="w-8 h-8 bg-black/70 rounded-full flex items-center justify-center hover:bg-black"><i class="ri-arrow-left-s-line text-xl"></i></button><div><h1 class="text-[32px] font-bold">${escapeHtml(state.currentArtistName)}</h1><p class="text-zinc-400">${albums.length} albums</p></div></div>`;
+    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    albums.forEach(a => {
+      const id = a.id || a.browseId;
+      const img = getThumb(a, 400);
+      html += `<div onclick="loadAlbum('${id}')" class="group bg-[#181818] hover:bg-[#282828] p-4 rounded-lg cursor-pointer transition"><div class="relative mb-4"><img src="${img}" class="aspect-square w-full object-cover rounded shadow-lg" onerror="this.src='https://placehold.co/400x400/181818/535353?text=%E2%99%AA'"/><button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition flex items-center justify-center hover:scale-105"><i class="ri-play-fill text-black text-[26px] ml-0.5"></i></button></div><h3 class="font-bold text-[15px] truncate">${escapeHtml(a.title)}</h3><p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • ${a.type||'Album'}</p></div>`;
+    });
+    html += `</div></div>`;
+    view.innerHTML = html;
+    view.parentElement.scrollTop = 0;
+  } catch(e) {
+    view.innerHTML = `<div class="px-6 pt-[80px]">Failed to load albums</div>`;
+  }
+}
+
+async function showAllSingles() {
+  if (!state.artistSinglesBrowseId || !state.artistSinglesParams) return;
+  view.innerHTML = `<div class="px-6 pb-32 pt-[80px]"><h1 class="text-[32px] font-bold mb-2">${escapeHtml(state.currentArtistName)} — All Singles</h1><div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div></div>`;
+  try {
+    const res = await fetch(`${API_BASE}/api/artist_albums?browseId=${encodeURIComponent(state.artistSinglesBrowseId)}&params=${encodeURIComponent(state.artistSinglesParams)}`);
+    const data = await res.json();
+    const singles = data.albums || [];
+    let html = `<div class="px-6 pb-32 pt-[80px] max-w-[1800px] mx-auto"><div class="flex items-center gap-4 mb-8"><button onclick="loadArtist('${state.lastArtistId}')" class="w-8 h-8 bg-black/70 rounded-full flex items-center justify-center hover:bg-black"><i class="ri-arrow-left-s-line text-xl"></i></button><div><h1 class="text-[32px] font-bold">${escapeHtml(state.currentArtistName)}</h1><p class="text-zinc-400">${singles.length} singles & EPs</p></div></div>`;
+    html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
+    singles.forEach(a => {
+      const id = a.id || a.browseId;
+      const img = getThumb(a, 400);
+      html += `<div onclick="loadAlbum('${id}')" class="group bg-[#181818] hover:bg-[#282828] p-4 rounded-lg cursor-pointer transition"><div class="relative mb-4"><img src="${img}" class="aspect-square w-full object-cover rounded shadow-lg" onerror="this.src='https://placehold.co/400x400/181818/535353?text=%E2%99%AA'"/><button class="absolute bottom-2 right-2 w-12 h-12 bg-[#1db954] rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition flex items-center justify-center hover:scale-105"><i class="ri-play-fill text-black text-[26px] ml-0.5"></i></button></div><h3 class="font-bold text-[15px] truncate">${escapeHtml(a.title)}</h3><p class="text-[13px] text-zinc-400 mt-1">${a.year||''} • Single</p></div>`;
+    });
+    html += `</div></div>`;
+    view.innerHTML = html;
+    view.parentElement.scrollTop = 0;
+  } catch(e) {
+    view.innerHTML = `<div class="px-6 pt-[80px]">Failed to load singles</div>`;
+  }
+}
+
+// Album
+async function loadAlbum(id, fromHistory = false) {
+  if (!id || id === 'undefined') return;
+  if (!fromHistory) pushHistory({type:'album', id});
+  view.innerHTML = `<div class="flex justify-center py-24"><div class="w-10 h-10 border-2 border-zinc-700 border-t-[#1db954] rounded-full animate-spin"></div></div>`;
+  try {
+    const res = await fetch(`${API_BASE}/api/album/${id}`);
+    const data = await res.json();
+    renderAlbum(data);
+  } catch (e) {
+    view.innerHTML = `<div class="py-24 text-center text-zinc-500">Failed to load album</div>`;
+  }
+}
+
+function renderAlbum(data) {
+  state.albumTracks = data.tracks || data.songs || [];
+  const img = getThumb(data, 600);
+  const artists = (data.artists||[]).map(a=>`<span class="hover:underline cursor-pointer" onclick="loadArtist('${a.id||a.browseId}')">${escapeHtml(a.name)}</span>`).join(', ');
+  const year = data.year || '';
+
+  let html = `<div class="max-w-[1800px] mx-auto">
+    <div class="flex flex-col lg:flex-row items-end gap-6 lg:gap-8 mt-4 mb-8 px-1">
+      <div class="shrink-0 w-full max-w-[280px] lg:w-[280px] xl:w-[300px] mx-auto lg:mx-0">
+        <img src="${img}" class="w-full aspect-square object-cover rounded-md shadow-[0_24px_48px_rgba(0,0,0,.6)]" />
+      </div>
+      <div class="flex-1 min-w-0 w-full">
+        <p class="text-sm font-medium">Album</p>
+        <h1 class="text-[32px] sm:text-[48px] lg:text-[72px] xl:text-[88px] font-black leading-[1.05] tracking-tighter mt-2 mb-4 lg:mb-6 line-clamp-2">${escapeHtml(data.title || data.name)}</h1>
+        <div class="flex items-center gap-2 text-[14px] flex-wrap">
+          <img src="${img}" class="w-6 h-6 rounded-full object-cover"/>
+          ${artists}
+          ${year ? `<span class="text-zinc-300">•</span><span class="text-zinc-300">${year}</span>` : ''}
+          <span class="text-zinc-300">•</span>
+          <span class="text-zinc-300">${state.albumTracks.length} songs</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-gradient-to-b from-white/[0.07] to-transparent h-[232px] -mx-6 px-6 -mt-[268px] pt-[268px] pointer-events-none"></div>
+
+    <div class="relative">
+      <div class="flex items-center gap-6 py-6">
+        <button onclick="playAlbum()" class="w-14 h-14 bg-[#1db954] hover:bg-[#1ed760] rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition"><i class="ri-play-fill text-black text-[32px] ml-0.5"></i></button>
+        <button class="text-zinc-400 hover:text-white text-[32px]"><i class="ri-heart-line"></i></button>
+        <button class="text-zinc-400 hover:text-white text-[24px]">•••</button>
+      </div>
+
+      <div class="border-b border-white/10 sticky top-[64px] bg-[#121212]/95 backdrop-blur-md z-10 -mx-1 px-1">
+        <div class="grid grid-cols-[16px_1fr_50px] sm:grid-cols-[16px_4fr_2fr_50px] gap-4 px-4 h-9 items-center text-[13px] text-zinc-400 border-b border-white/[0.05]">
+          <div class="text-right">#</div>
+          <div>Title</div>
+          <div class="hidden sm:block">Plays</div>
+          <div class="text-right pr-2"><i class="ri-time-line text-[16px]"></i></div>
+        </div>
+      </div>
+
+      <div class="mt-2">`;
+
+  state.albumTracks.forEach((t,i) => {
+    t.artists = t.artists || data.artists;
+    t.thumbnails = t.thumbnails || data.thumbnails;
+    const plays = (Math.floor(Math.random()*5_000_000)+500_000).toLocaleString();
+    html += `<div onclick="playAlbumSong(${i})" class="group grid grid-cols-[16px_1fr_50px] sm:grid-cols-[16px_4fr_2fr_50px] gap-4 px-4 h-[56px] items-center rounded hover:bg-white/10 cursor-pointer">
+          <div class="text-[15px] text-zinc-400 text-right tabular-nums group-hover:hidden">${i+1}</div>
+          <div class="hidden group-hover:block text-white"><i class="ri-play-fill"></i></div>
+          <div class="min-w-0">
+            <p class="truncate text-[15px] leading-tight ${state.currentSong?.videoId===t.videoId?'text-[#1db954]':''}">${escapeHtml(t.title)}</p>
+            <p class="sm:hidden text-[13px] text-zinc-400 truncate">${escapeHtml((t.artists||[]).map(a=>a.name).join(', '))}</p>
+          </div>
+          <div class="hidden sm:block text-[14px] text-zinc-400 truncate">${plays}</div>
+          <div class="text-[14px] text-zinc-400 text-right tabular-nums pr-2">${formatDuration(t.duration)}</div>
+        </div>`;
+  });
+
+  html += `</div></div></div>`;
+  view.innerHTML = html;
+  view.parentElement.scrollTop = 0;
+}
+
+// Playback
+async function playSong(song, queue=[], idx=0) {
+  if (!song) return;
+  state.queue = queue.length? queue : [song];
+  state.index = idx;
+  state.currentSong = song;
+
+  const videoId = song.videoId;
+  const apiUrl = `${API_BASE}/api/stream?videoId=${videoId}`;
+
+  try {
+    const res = await fetch(apiUrl);
+    // — this is the fix for "Unexpected token 'I'" —
+    if (!res.ok) {
+      const text = await res.text(); // will be "Internal Server Error" if Python crashed
+      throw new Error(`Server ${res.status}: ${text.slice(0,100)}`);
+    }
+    const data = await res.json();
+    if (!data.url) throw new Error(data.error || 'No stream URL returned');
+
+    // your code from 585-606, now with a real url
+    audio.src = data.url;
+    audio.crossOrigin = "anonymous";
+    audio.play().then(() => {
+      state.isPlaying = true;
+      updatePlayButton();
+    }).catch(err => {
+      console.error('Audio play failed', err);
+      alert('Playback blocked: ' + err.message);
+    });
+
+  } catch(e) {
+    console.error('Play failed', e);
+    alert('Could not play: ' + e.message);
+    return; // don't update UI if we failed
+  }
+
+  // — UI updates (your exact code) —
+  $('#player').classList.remove('translate-y-full');
+  $('#player-thumb').src = getThumb(song, 120);
+  $('#player-title').textContent = song.title || 'Unknown Title';
+  const artistNames = (song.artists||[]).map(a=>a.name).join(', ') || song.artist || 'Unknown Artist';
+  $('#player-artist').textContent = artistNames;
+
+  const artistId = song.artists?.[0]?.id || state.lastArtistId;
+  const artistEl = $('#player-artist');
+  if (artistId) {
+    artistEl.onclick = () => loadArtist(artistId);
+    artistEl.classList.add('cursor-pointer', 'hover:underline');
+    artistEl.title = 'Go to artist';
+  } else {
+    artistEl.onclick = null;
+    artistEl.title = '';
+  }
+}
+function updatePlayerUI() {
+  $('#time-current').textContent = formatDuration(audio.currentTime);
+  $('#time-total').textContent = formatDuration(audio.duration || 0);
+  const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+  $('#progress-fill').style.width = pct + '%';
+  $('#progress-handle').style.left = pct + '%';
+}
+function updatePlayButton() {
+  $('#play-pause').innerHTML = state.isPlaying ? '<i class="ri-pause-fill text-[26px]"></i>' : '<i class="ri-play-fill text-[26px] ml-0.5"></i>';
+}
+function togglePlay() {
+  if (!audio.src) return;
+  if (state.isPlaying) { audio.pause(); state.isPlaying = false; } else { audio.play(); state.isPlaying = true; }
+  updatePlayButton();
+}
+function nextTrack() {
+  if (state.index < state.queue.length - 1) {
+    playSong(state.queue[state.index + 1], state.queue, state.index + 1);
+  }
+}
+function prevTrack() {
+  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+  if (state.index > 0) {
+    playSong(state.queue[state.index - 1], state.queue, state.index - 1);
+  }
+}
+
+audio.addEventListener('timeupdate', updatePlayerUI);
+audio.addEventListener('ended', nextTrack);
+audio.addEventListener('play', () => { state.isPlaying = true; updatePlayButton(); });
+audio.addEventListener('pause', () => { state.isPlaying = false; updatePlayButton(); });
+
+$('#progress').addEventListener('click', (e) => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  if (audio.duration) audio.currentTime = pct * audio.duration;
+});
+$('#volume').addEventListener('input', e => audio.volume = e.target.value);
+
+// Helpers for inline calls
+window.doSearch = doSearch;
+window.loadArtist = loadArtist;
+window.loadAlbum = loadAlbum;
+window.showAllAlbums = showAllAlbums;
+window.showAllSingles = showAllSingles;
+window.playSearchSong = (i) => playSong(state.searchSongs[i], state.searchSongs, i);
+window.playArtistSong = (i) => playSong(state.artistSongs[i], state.artistSongs, i);
+window.playAlbumSong = (i) => playSong(state.albumTracks[i], state.albumTracks, i);
+window.playArtist = () => { if (state.artistSongs.length) playArtistSong(0); };
+window.playAlbum = () => { if (state.albumTracks.length) playAlbumSong(0); };
+window.togglePlay = togglePlay;
+window.nextTrack = nextTrack;
+window.prevTrack = prevTrack;
+window.navigateBack = navigateBack;
+window.navigateForward = navigateForward;
+window.goHome = goHome;
+
+// Init home history
+document.addEventListener('DOMContentLoaded', () => {
+  state.homeHTML = view.innerHTML;
+  pushHistory({type:'home'});
+});
+
+// Demo: focus search on /
+window.addEventListener('keydown', (e) => { if (e.key === '/' && document.activeElement !== $('#search')) { e.preventDefault(); $('#search').focus(); } });
+</script>
+</body>
+</html>

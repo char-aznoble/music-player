@@ -1,0 +1,34 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.chaquo.python'
+}
+android {
+    namespace 'com.chad.player'
+    compileSdk 34
+    defaultConfig {
+        applicationId "com.chad.player"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        python {
+            pip {
+                install "fastapi"
+                install "uvicorn"
+                install "ytmusicapi"
+                install "yt-dlp"
+                install "requests"
+            }
+        }
+        ndk { abiFilters "arm64-v8a", "armeabi-v7a", "x86_64" }
+    }
+    buildTypes { release { minifyEnabled false } }
+}
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.webkit:webkit:1.9.0'
+}
+chaquopy { }
