@@ -672,6 +672,16 @@ audio.addEventListener('timeupdate', updatePlayerUI);
 audio.addEventListener('ended', nextTrack);
 audio.addEventListener('play', () => { state.isPlaying = true; updatePlayButton(); });
 audio.addEventListener('pause', () => { state.isPlaying = false; updatePlayButton(); });
+audio.addEventListener('error', (e) => {
+  console.error('Audio element error:', audio.error);
+  alert('Audio Error: ' + (audio.error ? audio.error.message : 'Unknown error'));
+});
+audio.addEventListener('loadstart', () => {
+  console.log('Audio loading started...');
+});
+audio.addEventListener('canplay', () => {
+  console.log('Audio can start playing');
+});
 
 $('#progress').addEventListener('click', (e) => {
   const rect = e.currentTarget.getBoundingClientRect();

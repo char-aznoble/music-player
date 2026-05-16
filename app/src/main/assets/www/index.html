@@ -143,7 +143,8 @@
 <script>
 const API_BASE = 'http://127.0.0.1:8000';
 const audio = new Audio();
-audio.crossOrigin = 'anonymous';
+audio.preload = "auto";
+audio.crossOrigin = null; // YouTube needs referer, don't use anonymous
 audio.volume = 0.7;
 
 let state = {
@@ -609,7 +610,7 @@ async function playSong(song, queue=[], idx=0) {
     if (!data.url) throw new Error(data.error || 'No stream URL returned');
 
     audio.src = data.url;
-    audio.crossOrigin = "anonymous";
+    // removed
     audio.play().then(() => {
       state.isPlaying = true;
       updatePlayButton();

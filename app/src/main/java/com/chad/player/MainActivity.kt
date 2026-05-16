@@ -3,7 +3,10 @@ package com.chad.player
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.webkit.JavascriptInterface
+import android.webkit.WebChromeClient
+import android.webkit.WebSettings
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import com.chaquo.python.Python
@@ -21,18 +24,30 @@ class MainActivity : AppCompatActivity() {
             Python.start(AndroidPlatform(this))
         }
         
-        // Start Python FastAPI server in background
+        // Start Python FastAPI server
         val py = Python.getInstance()
         py.getModule("server").callAttr("start_server")
 
         webView = WebView(this)
         setContentView(webView)
         
-        webView.settings.javaScriptEnabled = true
-        webView.settings.domStorageEnabled = true
-        webView.settings.allowFileAccess = true
-        webView.settings.mediaPlaybackRequiresUserGesture = false
+        with(webView.settings) {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            allowFileAccess = true
+            allowContentAccess = true
+            databaseEnabled = true
+            mediaPlaybackRequiresUserGesture = false
+            // Critical for file:// -> http://127.0.0.1 and for audio
+            allowUniversalAccessFromFileURLs = true
+            allowFileAccessFromFileURLs = true
+            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+            userAgentString = "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36"
+        }
         
+        webView.webChromeClient = WebChromeClient()
+        webView.webViewClient = WebViewClient()
+
         webView.addJavascriptInterface(WebAppInterface(), "Android")
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
