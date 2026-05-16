@@ -41,11 +41,18 @@ class MainActivity : AppCompatActivity() {
             // Critical for file:// -> http://127.0.0.1 and for audio
             allowUniversalAccessFromFileURLs = true
             allowFileAccessFromFileURLs = true
+            setAllowFileAccessFromFileURLs(true)
+            setAllowUniversalAccessFromFileURLs(true)
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             userAgentString = "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36"
         }
         
-        webView.webChromeClient = WebChromeClient()
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onPermissionRequest(request: PermissionRequest) {
+        // YouTube iframe may request audio
+            request.grant(request.resources)
+            }
+        }
         webView.settings.mediaPlaybackRequiresUserGesture = false
         webView.settings.allowUniversalAccessFromFileURLs = true
         webView.webViewClient = WebViewClient()

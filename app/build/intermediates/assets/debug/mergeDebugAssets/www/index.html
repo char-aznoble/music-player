@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.youtube.com/iframe_api"></script>
 <style>
   * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
   ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -98,6 +99,24 @@
 
   <!-- Player -->
   <footer id="player" class="h-[90px] bg-[#181818] border-t border-white/5 px-2 sm:px-4 flex items-center gap-2 sm:gap-4 translate-y-full transition-transform duration-300 shrink-0">
+    <div id="yt-player"></div>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+let player;
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('yt-player', {
+    height: '0', width: '0', // hidden audio-only
+    videoId: 'B1o2UCLvD38',
+    playerVars: { autoplay: 1, controls: 0 },
+    events: { onReady: e => e.target.playVideo() }
+  });
+}
+
+function playSong(song) {
+  player.loadVideoById(song.videoId);
+  // update your UI with song.title, artwork from ytmusicapi
+}
+</script>
     <div class="flex items-center gap-3 w-[55%] sm:w-[30%] min-w-[120px] max-w-[300px]">
       <img id="player-thumb" src="" class="w-14 h-14 rounded-[4px] object-cover bg-[#282828] shadow-md shrink-0" />
       <div class="min-w-0 block">
@@ -142,10 +161,31 @@
 
 <script>
 const API_BASE = 'http://127.0.0.1:8000';
-const audio = new Audio();
-audio.preload = "auto";
-audio.crossOrigin = null; // YouTube needs referer, don't use anonymous
-audio.volume = 0.7;
+let player;
+let isPlayerReady = false;
+
+// YouTube API calls this automatically
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('yt-player', {
+    height: '0',
+    width: '0',
+    playerVars: {
+      autoplay: 0,
+      controls: 0,
+      playsinline: 1
+    },
+    events: {
+      onReady: () => { isPlayerReady = true; },
+      onStateChange: onPlayerStateChange
+    }
+  });
+}
+
+function onPlayerStateChange(event) {
+  // Map YouTube states to your UI
+  state.isPlaying = (event.data === YT.PlayerState.PLAYING);
+  updatePlayButton();
+}
 
 let state = {
   queue: [],
@@ -590,62 +630,31 @@ function renderAlbum(data) {
 
 // Playback
 async function playSong(song, queue=[], idx=0) {
-  if (!song) return;
+  if (!song ||!isPlayerReady) return;
+
   state.queue = queue.length? queue : [song];
   state.index = idx;
   state.currentSong = song;
 
-  const videoId = song.videoId;
-  const artistNames = (song.artists||[]).map(a=>a.name).join(', ') || song.artist || 'Unknown Artist';
-  const query = `${song.title} ${artistNames}`.trim();
-  const apiUrl = `${API_BASE}/api/stream?videoId=${videoId}&query=${encodeURIComponent(query)}`;
+  // Load video in hidden player
+  player.loadVideoById(song.videoId);
 
-  try {
-    const res = await fetch(apiUrl);
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Server ${res.status}: ${text.slice(0,100)}`);
-    }
-    const data = await res.json();
-    if (!data.url) throw new Error(data.error || 'No stream URL returned');
-
-    audio.src = data.url;
-    // removed
-    audio.play().then(() => {
-      state.isPlaying = true;
-      updatePlayButton();
-    }).catch(err => {
-      console.error('Audio play failed', err);
-      alert('Playback blocked: ' + err.message);
-    });
-
-  } catch(e) {
-    console.error('Play failed', e);
-    alert('Could not play: ' + e.message);
-    return; // don't update UI if we failed
-  }
-
-  // — UI updates —
+  // Update your UI (keep all this)
   $('#player').classList.remove('translate-y-full');
   $('#player-thumb').src = getThumb(song, 120);
   $('#player-title').textContent = song.title || 'Unknown Title';
-  $('#player-artist').textContent = artistNames;
-
-  const artistId = song.artists?.[0]?.id || state.lastArtistId;
-  const artistEl = $('#player-artist');
-  if (artistId) {
-    artistEl.onclick = () => loadArtist(artistId);
-    artistEl.classList.add('cursor-pointer', 'hover:underline');
-    artistEl.title = 'Go to artist';
-  } else {
-    artistEl.onclick = null;
-    artistEl.title = '';
-  }
+  $('#player-artist').textContent = (song.artists||[]).map(a=>a.name).join(', ');
 }
 function updatePlayerUI() {
-  $('#time-current').textContent = formatDuration(audio.currentTime);
-  $('#time-total').textContent = formatDuration(audio.duration || 0);
-  const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+  if (!isPlayerReady || !player.getDuration) return;
+  
+  const current = player.getCurrentTime() || 0;
+  const total = player.getDuration() || 0;
+  
+  $('#time-current').textContent = formatDuration(current);
+  $('#time-total').textContent = formatDuration(total);
+  
+  const pct = total ? (current / total) * 100 : 0;
   $('#progress-fill').style.width = pct + '%';
   $('#progress-handle').style.left = pct + '%';
 }
@@ -653,9 +662,19 @@ function updatePlayButton() {
   $('#play-pause').innerHTML = state.isPlaying ? '<i class="ri-pause-fill text-[26px]"></i>' : '<i class="ri-play-fill text-[26px] ml-0.5"></i>';
 }
 function togglePlay() {
-  if (!audio.src) return;
-  if (state.isPlaying) { audio.pause(); state.isPlaying = false; } else { audio.play(); state.isPlaying = true; }
-  updatePlayButton();
+  if (!isPlayerReady) return;
+  if (state.isPlaying) { player.pauseVideo(); }
+  else { player.playVideo(); }
+}
+
+function updatePlayerUI() {
+  if (!isPlayerReady) return;
+  const current = player.getCurrentTime() || 0;
+  const total = player.getDuration() || 0;
+  $('#time-current').textContent = formatDuration(current);
+  $('#time-total').textContent = formatDuration(total);
+  const pct = total? (current / total) * 100 : 0;
+  $('#progress-fill').style.width = pct + '%';
 }
 function nextTrack() {
   if (state.index < state.queue.length - 1) {
@@ -669,27 +688,49 @@ function prevTrack() {
   }
 }
 
-audio.addEventListener('timeupdate', updatePlayerUI);
-audio.addEventListener('ended', nextTrack);
-audio.addEventListener('play', () => { state.isPlaying = true; updatePlayButton(); });
-audio.addEventListener('pause', () => { state.isPlaying = false; updatePlayButton(); });
-audio.addEventListener('error', (e) => {
-  console.error('Audio element error:', audio.error);
-  alert('Audio Error: ' + (audio.error ? audio.error.message : 'Unknown error'));
-});
-audio.addEventListener('loadstart', () => {
-  console.log('Audio loading started...');
-});
-audio.addEventListener('canplay', () => {
-  console.log('Audio can start playing');
-});
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('yt-player', {
+    height: '0',
+    width: '0',
+    playerVars: { autoplay: 0, controls: 0, playsinline: 1 },
+    events: {
+      onReady: () => { 
+        isPlayerReady = true;
+        // Start polling for time updates
+        setInterval(updatePlayerUI, 500);
+      },
+      onStateChange: (event) => {
+        // YouTube states: -1=unstarted, 0=ended, 1=playing, 2=paused, 3=buffering
+        if (event.data === YT.PlayerState.PLAYING) {
+          state.isPlaying = true;
+          updatePlayButton();
+        } else if (event.data === YT.PlayerState.PAUSED) {
+          state.isPlaying = false;
+          updatePlayButton();
+        } else if (event.data === YT.PlayerState.ENDED) {
+          nextTrack(); // your existing next track logic
+        }
+      },
+      onError: (e) => {
+        console.error('YouTube error:', e.data);
+        alert('Playback error: ' + e.data);
+      }
+    }
+  });
+}
 
 $('#progress').addEventListener('click', (e) => {
+  if (!isPlayerReady) return;
   const rect = e.currentTarget.getBoundingClientRect();
   const pct = (e.clientX - rect.left) / rect.width;
-  if (audio.duration) audio.currentTime = pct * audio.duration;
+  const duration = player.getDuration();
+  if (duration) player.seekTo(pct * duration, true);
 });
-$('#volume').addEventListener('input', e => audio.volume = e.target.value);
+$('#volume').addEventListener('input', e => {
+  if (!isPlayerReady) return;
+  // YouTube volume is 0-100, your slider is 0-1
+  player.setVolume(e.target.value * 100);
+});
 
 // Helpers for inline calls
 window.doSearch = doSearch;
