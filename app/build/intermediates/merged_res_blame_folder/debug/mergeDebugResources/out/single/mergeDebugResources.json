@@ -1,0 +1,18 @@
+[
+    {
+        "merged": "com.chad.player.app-debug-32:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.chad.player.app-main-34:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-debug-32:\\xml_network_security_config.xml.flat",
+        "source": "C:\\Users\\Laptop Lenovo\\.gradle\\daemon\\8.7\\com.chad.player.app-main-34:\\xml\\network_security_config.xml"
+    },
+    {
+        "merged": "com.chad.player.app-debug-32:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.chad.player.app-main-34:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.chad.player.app-debug-32:/mipmap_ic_launcher.xml.flat",
+        "source": "com.chad.player.app-main-34:/mipmap/ic_launcher.xml"
+    }
+]
