@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.chad.player.app-mergeDebugResources-30:/values-hdpi-v4/values-hdpi-v4.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Laptop Lenovo\\.gradle\\caches\\9.0.0\\transforms\\372881e71e558a85ae47c1d9999deee8\\transformed\\appcompat-1.6.1\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "6",
+                        "endColumns": "13",
+                        "endOffsets": "327"
+                    }
+                }
+            ]
+        }
+    ]
+}
