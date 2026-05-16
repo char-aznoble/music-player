@@ -13,7 +13,8 @@ def search(q: str):
     artists_raw = ytmusic.search(q, filter='artists', limit=12)
     songs_raw = ytmusic.search(q, filter='songs', limit=12)
     albums_raw = ytmusic.search(q, filter='albums', limit=12)
-    artists = [{"id": a.get('browseId'), "name": a.get('artist'), "thumbnails": a.get('thumbnails', [])} for a in artists_raw if a.get('browseId')]
+    # Mapping 'name' correctly from the raw artist search results
+    artists = [{"id": a.get('browseId'), "name": a.get('artist') or a.get('name'), "thumbnails": a.get('thumbnails', [])} for a in artists_raw if a.get('browseId')]
     songs = [{"id": s.get('videoId'), "title": s.get('title'), "artist": (s.get('artists') or [{}])[0].get('name',''), "artists": [{"id": a.get('id'), "name": a.get('name')} for a in s.get('artists',[])], "thumbnails": s.get('thumbnails', []), "duration": s.get('duration')} for s in songs_raw if s.get('videoId')]
     albums = [{"id": al.get('browseId'), "title": al.get('title'), "artist": (al.get('artists') or [{}])[0].get('name',''), "year": al.get('year'), "thumbnails": al.get('thumbnails', [])} for al in albums_raw if al.get('browseId')]
     return {"artists": artists, "songs": songs, "albums": albums}
@@ -63,10 +64,7 @@ def album(bid: str):
 
 @app.get("/api/stream")
 def stream(videoId: str = None, query: str = None):
-    # If we have a videoId, we can still use it, but we'll prioritize a search-based
-    # approach if specifically requested, or just use the videoId to get the direct URL.
-    # The user wants to "scrape from youtube.com".
-
+    # The user wants to "scrape from youtube.com" for audio
     ydl_opts = {
         'format': 'bestaudio/best',
         'quiet': True,
@@ -77,15 +75,16 @@ def stream(videoId: str = None, query: str = None):
         'nocheckcertificate': True,
     }
 
-    # Construct a search query if only videoId is provided,
-    # or use the provided query (title + artist)
-    search_query = query
-    if not search_query and videoId:
-        search_query = f"https://www.youtube.com/watch?v={videoId}"
+    # If a query is provided (Title + Artist), use it to search YouTube.
+    # Otherwise, fall back to the videoId URL.
+    if query:
+        search_target = f"ytsearch1:{query}"
+    else:
+        search_target = f"https://www.youtube.com/watch?v={videoId}"
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(search_query, download=False)
+            info = ydl.extract_info(search_target, download=False)
             if 'entries' in info:
                 info = info['entries'][0]
 
