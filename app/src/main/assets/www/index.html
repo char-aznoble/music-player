@@ -170,8 +170,13 @@ const view = $('#view');
 function updateNavButtons() {
   const backBtn = $('#nav-back');
   const fwdBtn = $('#nav-forward');
-  if (backBtn) backBtn.style.opacity = state.historyIndex > 0 ? '1' : '0.6';
+  const canBack = state.historyIndex > 0;
+  if (backBtn) backBtn.style.opacity = canBack ? '1' : '0.6';
   if (fwdBtn) fwdBtn.style.opacity = state.historyIndex < state.history.length - 1 ? '1' : '0.6';
+
+  if (window.Android && window.Android.setCanGoBack) {
+    window.Android.setCanGoBack(canBack);
+  }
 }
 function pushHistory(entry) {
   state.history = state.history.slice(0, state.historyIndex + 1);
@@ -188,7 +193,18 @@ function navigateTo(entry, fromHistory = false) {
     case 'album': loadAlbum(entry.id, true); break;
   }
 }
-function navigateBack() { if (state.historyIndex > 0) { state.historyIndex--; navigateTo(state.history[state.historyIndex], true); updateNavButtons(); } }
+function navigateBack() {
+  if (state.historyIndex > 0) {
+    state.historyIndex--;
+    navigateTo(state.history[state.historyIndex], true);
+    updateNavButtons();
+    return true;
+  }
+  return false;
+}
+function canNavigateBack() {
+  return state.historyIndex > 0;
+}
 function navigateForward() { if (state.historyIndex < state.history.length - 1) { state.historyIndex++; navigateTo(state.history[state.historyIndex], true); updateNavButtons(); } }
 function renderHome() { view.innerHTML = state.homeHTML; view.parentElement.scrollTop = 0; }
 function goHome() { navigateTo({type:'home'}); }
@@ -403,7 +419,7 @@ function renderArtist(data) {
   html += `</div></div>`;
 
   // Albums
-  html += `<section class="mt-12"><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold hover:underline cursor-pointer">Albums</h2>${state.artistAlbumsBrowseId ? `<button onclick="showAllAlbums()" class="text-sm font-bold text-zinc-400 hover:underline hidden sm:block">View all albums</button>` : ''}</div>`;
+  html += `<section class="mt-12"><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold hover:underline cursor-pointer">Albums</h2>${state.artistAlbumsBrowseId ? `<button onclick="showAllAlbums()" class="text-sm font-bold text-zinc-400 hover:underline">View all albums</button>` : ''}</div>`;
   if (albums.length) {
     html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
     albums.forEach(a => {
@@ -425,7 +441,7 @@ function renderArtist(data) {
   html += `</section>`;
 
   // Singles
-  html += `<section class="mt-12 mb-16"><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold hover:underline cursor-pointer">Singles and EPs</h2>${state.artistSinglesBrowseId ? `<button onclick="showAllSingles()" class="text-sm font-bold text-zinc-400 hover:underline hidden sm:block">View all</button>` : ''}</div>`;
+  html += `<section class="mt-12 mb-16"><div class="flex items-center justify-between mb-5"><h2 class="text-2xl font-bold hover:underline cursor-pointer">Singles and EPs</h2>${state.artistSinglesBrowseId ? `<button onclick="showAllSingles()" class="text-sm font-bold text-zinc-400 hover:underline">View all</button>` : ''}</div>`;
   if (singles.length) {
     html += `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-6">`;
     singles.forEach(a => {
