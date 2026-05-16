@@ -21,7 +21,38 @@ def search(q: str):
 @app.get("/api/artist/{bid}")
 def artist(bid: str):
     data = ytmusic.get_artist(bid)
-    return data
+    # Extract popular songs
+    songs_raw = data.get('songs', {}).get('results', [])
+    songs = [{"videoId": s.get('videoId'), "title": s.get('title'), "thumbnails": s.get('thumbnails', []), "duration": s.get('duration'), "artists": [{"id": a.get('id'), "name": a.get('name')} for a in s.get('artists', [])]} for s in songs_raw]
+
+    # Extract albums
+    albums_raw = data.get('albums', {}).get('results', [])
+    albums = [{"id": a.get('browseId'), "title": a.get('title'), "thumbnails": a.get('thumbnails', []), "year": a.get('year'), "type": "Album"} for a in albums_raw]
+
+    # Extract singles
+    singles_raw = data.get('singles', {}).get('results', [])
+    singles = [{"id": s.get('browseId'), "title": s.get('title'), "thumbnails": s.get('thumbnails', []), "year": s.get('year'), "type": "Single"} for s in singles_raw]
+
+    return {
+        "name": data.get('name'),
+        "description": data.get('description'),
+        "views": data.get('views'),
+        "subscribers": data.get('subscribers'),
+        "thumbnails": data.get('thumbnails', []),
+        "songs": songs,
+        "albums": albums,
+        "singles": singles,
+        "albumsBrowseId": data.get('albums', {}).get('browseId'),
+        "albumsParams": data.get('albums', {}).get('params'),
+        "singlesBrowseId": data.get('singles', {}).get('browseId'),
+        "singlesParams": data.get('singles', {}).get('params')
+    }
+
+@app.get("/api/artist_albums")
+def artist_albums(browseId: str, params: str):
+    data = ytmusic.get_artist_albums(browseId, params)
+    albums = [{"id": a.get('browseId'), "title": a.get('title'), "thumbnails": a.get('thumbnails', []), "year": a.get('year'), "type": a.get('type')} for a in data]
+    return {"albums": albums}
 
 @app.get("/api/album/{bid}")
 def album(bid: str):
