@@ -3,6 +3,7 @@ package com.chad.player
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.webkit.JavascriptInterface
+import android.webkit.PermissionRequest
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
 import android.webkit.WebView

@@ -630,20 +630,23 @@ function renderAlbum(data) {
 
 // Playback
 async function playSong(song, queue=[], idx=0) {
-  if (!song ||!isPlayerReady) return;
-
-  state.queue = queue.length? queue : [song];
+  if (!song || !isPlayerReady) return;
+  
+  state.queue = queue;
   state.index = idx;
   state.currentSong = song;
 
-  // Load video in hidden player
+  // Android 16: load first, then play after a tick
   player.loadVideoById(song.videoId);
+  
+  // Wait for load, then play (keeps it in user gesture context)
+  setTimeout(() => {
+    player.playVideo();
+  }, 100);
 
-  // Update your UI (keep all this)
-  $('#player').classList.remove('translate-y-full');
+  // update UI...
   $('#player-thumb').src = getThumb(song, 120);
-  $('#player-title').textContent = song.title || 'Unknown Title';
-  $('#player-artist').textContent = (song.artists||[]).map(a=>a.name).join(', ');
+  $('#player-title').textContent = song.title;
 }
 function updatePlayerUI() {
   if (!isPlayerReady || !player.getDuration) return;
