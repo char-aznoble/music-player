@@ -595,7 +595,7 @@ async function playSong(song, queue=[], idx=0) {
   state.currentSong = song;
 
   const videoId = song.videoId;
-  const artistNames = (song.artists||[]).map(a=>a.name).join(', ') || song.artist || '';
+  const artistNames = (song.artists||[]).map(a=>a.name).join(', ') || song.artist || 'Unknown Artist';
   const query = `${song.title} ${artistNames}`.trim();
   const apiUrl = `${API_BASE}/api/stream?videoId=${videoId}&query=${encodeURIComponent(query)}`;
 
@@ -624,11 +624,10 @@ async function playSong(song, queue=[], idx=0) {
     return; // don't update UI if we failed
   }
 
-  // — UI updates (your exact code) —
+  // — UI updates —
   $('#player').classList.remove('translate-y-full');
   $('#player-thumb').src = getThumb(song, 120);
   $('#player-title').textContent = song.title || 'Unknown Title';
-  const artistNames = (song.artists||[]).map(a=>a.name).join(', ') || song.artist || 'Unknown Artist';
   $('#player-artist').textContent = artistNames;
 
   const artistId = song.artists?.[0]?.id || state.lastArtistId;

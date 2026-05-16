@@ -10,44 +10,115 @@ ytmusic = YTMusic()
 
 @app.get("/api/search")
 def search(q: str):
-    artists_raw = ytmusic.search(q, filter='artists', limit=12)
-    songs_raw = ytmusic.search(q, filter='songs', limit=12)
-    albums_raw = ytmusic.search(q, filter='albums', limit=12)
-    # Mapping 'name' correctly from the raw artist search results
-    artists = [{"id": a.get('browseId'), "name": a.get('artist') or a.get('name'), "thumbnails": a.get('thumbnails', [])} for a in artists_raw if a.get('browseId')]
-    songs = [{"id": s.get('videoId'), "title": s.get('title'), "artist": (s.get('artists') or [{}])[0].get('name',''), "artists": [{"id": a.get('id'), "name": a.get('name')} for a in s.get('artists',[])], "thumbnails": s.get('thumbnails', []), "duration": s.get('duration')} for s in songs_raw if s.get('videoId')]
-    albums = [{"id": al.get('browseId'), "title": al.get('title'), "artist": (al.get('artists') or [{}])[0].get('name',''), "year": al.get('year'), "thumbnails": al.get('thumbnails', [])} for al in albums_raw if al.get('browseId')]
-    return {"artists": artists, "songs": songs, "albums": albums}
+    try:
+        artists_raw = ytmusic.search(q, filter='artists', limit=12)
+        songs_raw = ytmusic.search(q, filter='songs', limit=12)
+        albums_raw = ytmusic.search(q, filter='albums', limit=12)
+
+        artists = []
+        for a in artists_raw:
+            # Check for any possible ID field
+            bid = a.get('browseId') or a.get('channelId') or a.get('id')
+            if bid:
+                # Check for any possible name field
+                name = a.get('artist') or a.get('name') or a.get('title')
+                if name:
+                    artists.append({
+                        "id": bid,
+                        "browseId": bid,
+                        "name": name,
+                        "thumbnails": a.get('thumbnails', [])
+                    })
+
+        songs = []
+        for s in songs_raw:
+            vid = s.get('videoId')
+            if vid:
+                title = s.get('title')
+                # Get artist name safely
+                raw_artists = s.get('artists') or []
+                artist_name = raw_artists[0].get('name') if raw_artists else (s.get('artist') or s.get('name') or '')
+
+                songs.append({
+                    "id": vid,
+                    "videoId": vid,
+                    "title": title,
+                    "artist": artist_name,
+                    "artists": [{"id": art.get('id') or art.get('browseId'), "name": art.get('name')} for art in raw_artists],
+                    "thumbnails": s.get('thumbnails', []),
+                    "duration": s.get('duration')
+                })
+
+        albums = []
+        for al in albums_raw:
+            bid = al.get('browseId') or al.get('id')
+            if bid:
+                title = al.get('title') or al.get('name')
+                raw_artists = al.get('artists') or []
+                artist_name = raw_artists[0].get('name') if raw_artists else (al.get('artist') or al.get('name') or '')
+
+                albums.append({
+                    "id": bid,
+                    "browseId": bid,
+                    "title": title,
+                    "artist": artist_name,
+                    "artists": [{"id": art.get('id') or art.get('browseId'), "name": art.get('name')} for art in raw_artists],
+                    "year": al.get('year'),
+                    "thumbnails": al.get('thumbnails', [])
+                })
+
+        return {"artists": artists, "songs": songs, "albums": albums}
+    except Exception as e:
+        print(f"Search error: {e}")
+        return {"error": str(e), "artists": [], "songs": [], "albums": []}
 
 @app.get("/api/artist/{bid}")
 def artist(bid: str):
-    data = ytmusic.get_artist(bid)
-    # Extract popular songs
-    songs_raw = data.get('songs', {}).get('results', [])
-    songs = [{"videoId": s.get('videoId'), "title": s.get('title'), "thumbnails": s.get('thumbnails', []), "duration": s.get('duration'), "artists": [{"id": a.get('id'), "name": a.get('name')} for a in s.get('artists', [])]} for s in songs_raw]
+    try:
+        data = ytmusic.get_artist(bid)
 
-    # Extract albums
-    albums_raw = data.get('albums', {}).get('results', [])
-    albums = [{"id": a.get('browseId'), "title": a.get('title'), "thumbnails": a.get('thumbnails', []), "year": a.get('year'), "type": "Album"} for a in albums_raw]
+        # Helper to extract results from a category (songs, albums, etc.)
+        def get_results(key):
+            category = data.get(key, {})
+            if isinstance(category, list): return category
+            return category.get('results', [])
 
-    # Extract singles
-    singles_raw = data.get('singles', {}).get('results', [])
-    singles = [{"id": s.get('browseId'), "title": s.get('title'), "thumbnails": s.get('thumbnails', []), "year": s.get('year'), "type": "Single"} for s in singles_raw]
+        # Extract popular songs
+        songs_raw = get_results('songs')
+        songs = []
+        for s in songs_raw:
+            songs.append({
+                "videoId": s.get('videoId'),
+                "title": s.get('title'),
+                "thumbnails": s.get('thumbnails', []),
+                "duration": s.get('duration'),
+                "artists": [{"id": a.get('id'), "name": a.get('name')} for a in s.get('artists', [])]
+            })
 
-    return {
-        "name": data.get('name'),
-        "description": data.get('description'),
-        "views": data.get('views'),
-        "subscribers": data.get('subscribers'),
-        "thumbnails": data.get('thumbnails', []),
-        "songs": songs,
-        "albums": albums,
-        "singles": singles,
-        "albumsBrowseId": data.get('albums', {}).get('browseId'),
-        "albumsParams": data.get('albums', {}).get('params'),
-        "singlesBrowseId": data.get('singles', {}).get('browseId'),
-        "singlesParams": data.get('singles', {}).get('params')
-    }
+        # Extract albums
+        albums_raw = get_results('albums')
+        albums = [{"id": a.get('browseId'), "title": a.get('title'), "thumbnails": a.get('thumbnails', []), "year": a.get('year'), "type": "Album"} for a in albums_raw]
+
+        # Extract singles
+        singles_raw = get_results('singles')
+        singles = [{"id": s.get('browseId'), "title": s.get('title'), "thumbnails": s.get('thumbnails', []), "year": s.get('year'), "type": "Single"} for s in singles_raw]
+
+        return {
+            "name": data.get('name', 'Unknown Artist'),
+            "description": data.get('description'),
+            "views": data.get('views'),
+            "subscribers": data.get('subscribers'),
+            "thumbnails": data.get('thumbnails', []),
+            "songs": songs,
+            "albums": albums,
+            "singles": singles,
+            "albumsBrowseId": data.get('albums', {}).get('browseId') if isinstance(data.get('albums'), dict) else None,
+            "albumsParams": data.get('albums', {}).get('params') if isinstance(data.get('albums'), dict) else None,
+            "singlesBrowseId": data.get('singles', {}).get('browseId') if isinstance(data.get('singles'), dict) else None,
+            "singlesParams": data.get('singles', {}).get('params') if isinstance(data.get('singles'), dict) else None
+        }
+    except Exception as e:
+        return {"error": str(e), "name": "Error Loading Artist", "songs": [], "albums": [], "singles": []}
 
 @app.get("/api/artist_albums")
 def artist_albums(browseId: str, params: str):
